@@ -1,9 +1,11 @@
 #include "ofxOpenVrUtil.h"
+#include "Utils.h"
+#include "ofGraphics.h"
 
 namespace ofxOpenVrUtil {
 	Interface::Interface() :
-		vrSys(nullptr), systemName("No Driver"), modelNumber("No Display"),
-		trackedCam(vrSys)
+		vrSys(nullptr),  systemName("No Driver"), modelNumber("No Display"),
+		trackedCam(vrSys), hmd(vrSys)
 	{}
 
 	void Interface::setup() {
@@ -17,28 +19,98 @@ namespace ofxOpenVrUtil {
 		}
 
 		// Get Property strings
-		systemName = getPropString(vr::Prop_TrackingSystemName_String);
-		modelNumber = getPropString(vr::Prop_ModelNumber_String);
+		systemName = getPropString(vrSys, vr::Prop_TrackingSystemName_String);
+		modelNumber = getPropString(vrSys, vr::Prop_ModelNumber_String);
+
+		// TODO: Prepare RenderModel
+		// Prepare Compositor
+		vrCompositor = vr::VRCompositor();
+		if (!vrCompositor) {
+			ofLogError(__FUNCTION__) << "Compositor initialization failed.";
+			return;
+		}
+
+		hmd.setup(vrSys);
+		trackedDevivePose.resize(vr::k_unMaxTrackedDeviceCount);
 
 	}
 
-	std::string Interface::getPropString(vr::TrackedDeviceProperty prop) {
-		if (!vrSys) ofLogError(__FUNCTION__) << "IVRSystem is not initialized.";
-		
-		vr::TrackedPropertyError e;
-		uint32_t len = vrSys->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, prop, NULL, 0, &e);
-		
-		if (len == 0) {
-			ofLogError(__FUNCTION__) << "No property found.";
-			return "";
-		} else {
-			std::string result;
-			char* buf = new char[len];
-			len = vrSys->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, prop, buf, len, &e);
-			std::string sResult = buf;
-			delete[] buf;
-			return result;
+	void Interface::update() {
+
+		updateTrackedDeviceMatrix();
+		// TODO: handle input
+
+		if (trackedCam.isStreaming()) trackedCam.update();
+
+	}
+
+	void Interface::submit(const ofTexture& tex, vr::Hmd_Eye eye) {
+		vr::Texture_t vrTex = { (void*)(uintptr_t)(tex.getTextureData().textureID), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::VRCompositor()->Submit(eye, &vrTex);
+	}
+
+	void Interface::exit() {
+		vr::VR_Shutdown();
+		vrSys = nullptr;
+	}
+
+	void Interface::beginEye(vr::Hmd_Eye eye) {
+		ofPushMatrix();
+		ofPushView();
+		ofEnableDepthTest();
+		ofSetMatrixMode(OF_MATRIX_PROJECTION);
+		ofLoadMatrix(hmd.getProjectionMatrix(eye));
+		ofSetMatrixMode(OF_MATRIX_MODELVIEW);
+		ofLoadMatrix(hmd.getViewMatrix(eye));
+	}
+
+	void Interface::endEye() {
+		ofDisableDepthTest();
+		ofPopMatrix();
+		ofPopView();
+	}
+
+	void Interface::updateTrackedDeviceMatrix() {
+
+		auto e = vrCompositor->WaitGetPoses(trackedDevivePose.data(), trackedDevivePose.size(), NULL, 0);
+		if (e != vr::VRCompositorError_None) {
+			ofLogError(__FUNCTION__) << "Can't track device poses.";
 		}
+		
+		int validPoseCount = 0;
+		for (int i = 0; i < trackedDevivePose.size(); i++) {
+			if (trackedDevivePose[i].bPoseIsValid) {
+				validPoseCount++;
+
+				// trackedDeviceMatrix[i] = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+
+				switch (vrSys->GetTrackedDeviceClass(i)) {
+				case vr::TrackedDeviceClass_Controller: {
+					auto controllerType = vrSys->GetControllerRoleForTrackedDeviceIndex(i);
+					if (controllerType == vr::TrackedControllerRole_LeftHand) {
+						// TODO: store controller mat
+					} else if (controllerType == vr::TrackedControllerRole_RightHand) {
+						// TODO: store controller mat
+					} else {
+					}
+				} break;
+
+				case vr::TrackedDeviceClass_HMD: {
+					hmd.setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
+				} break;
+				case vr::TrackedDeviceClass_Invalid: break;
+				case vr::TrackedDeviceClass_GenericTracker: break;
+				case vr::TrackedDeviceClass_TrackingReference: break;
+				default: break;
+				}
+
+
+			} else {
+				continue;
+			}
+		
+		}
+
 	}
 
 }

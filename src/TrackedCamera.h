@@ -20,6 +20,9 @@ namespace ofxOpenVrUtil {
 		bool start();
 		bool stop();
 
+		bool isOpen() const { return bOpen; }
+		bool isStreaming() const { return bStreaming; }
+
 		void update();
 
 		const ofTexture getTexture(vr::Hmd_Eye eye) const {
@@ -33,9 +36,12 @@ namespace ofxOpenVrUtil {
 		
 		uint32_t frameWidth, frameHeight;
 		uint32_t bufferSize;
-		uint8_t* rawFrameBuffer;
+		std::vector<uint8_t> rawFrameBuffer;
 		std::array<ofTexture, 2> tex;
 		std::array<ofPixels, 2> pix;
 		uint32_t lastFrameCount;
+
+		bool bOpen;
+		bool bStreaming;
 	};
 }
