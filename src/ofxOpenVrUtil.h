@@ -16,14 +16,14 @@ namespace ofxOpenVrUtil {
 
 		void setup();
 		void update();
-		void submit(const ofTexture& tex, vr::Hmd_Eye eye);
+		void submit(const ofTexture& tex, vr::EVREye eye);
 
 		void exit();
 
 		TrackedCamera& getTrackedCamera() { return trackedCam; }
 		Hmd& getHmd() { return hmd; }
 
-		void beginEye(vr::Hmd_Eye eye);
+		void beginEye(vr::EVREye eye);
 		void endEye();
 
 	private:
@@ -32,7 +32,6 @@ namespace ofxOpenVrUtil {
 		ofParameterGroup group;
 
 		vr::IVRSystem* vrSys;
-		vr::IVRCompositor* vrCompositor;
 		std::string systemName;
 		std::string modelNumber;
 

@@ -3,13 +3,17 @@
 
 namespace ofxOpenVrUtil {
 
-	TrackedCamera::TrackedCamera(vr::IVRSystem* vrSys) : vrSys(vrSys), bOpen(false), bStreaming(false) {}
+	TrackedCamera::TrackedCamera() : vrSys(nullptr), bOpen(false), bStreaming(false) {}
 	TrackedCamera::~TrackedCamera() {
 		if (bStreaming) stop();
 		if (bOpen) close();
 
 		vrSys = nullptr;
 		trackedCamera = nullptr;
+	}
+
+	void TrackedCamera::setup(vr::IVRSystem* vrSys) {
+		this->vrSys = vrSys;
 	}
 
 	bool TrackedCamera::open() {
@@ -60,9 +64,10 @@ namespace ofxOpenVrUtil {
 			ofLogError() << "GetCameraFrameBounds() Failed!";
 			return false;
 		}
-		ofLogNotice(__FUNCTION__) << "Tracked Cam input size: " << frameWidth << " x " << frameHeight;
+		ofLogNotice(__FUNCTION__) << "Tracked Cam input size: " << frameWidth << " x " << frameHeight << " (bufferSize: " << size << ")";
 
 		if (size != 0 && size != bufferSize) {
+			bufferSize = size;
 			rawFrameBuffer.clear();
 			rawFrameBuffer.reserve(bufferSize);
 			rawFrameBuffer.assign(bufferSize, 0);
@@ -74,7 +79,10 @@ namespace ofxOpenVrUtil {
 			return false;
 		}
 
+		pix[vr::Eye_Left].allocate(frameWidth, frameHeight / 2, 4);
 		tex[vr::Eye_Left].allocate(frameWidth, frameHeight / 2, GL_RGBA);
+
+		pix[vr::Eye_Right].allocate(frameWidth, frameHeight / 2, 4);
 		tex[vr::Eye_Right].allocate(frameWidth, frameHeight / 2, GL_RGBA);
 
 		lastFrameCount = 0;
@@ -115,21 +123,18 @@ namespace ofxOpenVrUtil {
 		
 		// Load raw pixels to eye textures 
 		for (int i = 0; i < 2; i++) {
-			if (!pix[i].isAllocated()) {
-				pix[i].allocate(frameWidth, frameHeight / 2, 4);
-			}
-
-			std::vector<uint8_t>::const_iterator first, last;
-			if (i == vr::Hmd_Eye::Eye_Left) {
-				first = rawFrameBuffer.begin() + bufferSize / 2 + 1;
+			std::vector<uint8_t>::iterator first, last;
+			if (i == vr::Eye_Left) {
+				first = rawFrameBuffer.begin() + bufferSize / 2;
 				last = rawFrameBuffer.end();
 			} else {
 				first = rawFrameBuffer.begin();
-				last = rawFrameBuffer.begin() + bufferSize / 2;
+				last = rawFrameBuffer.begin() + bufferSize / 2 - 1;
 			}
 			std::vector<uint8_t> buf(first, last);
-			pix[i].setFromPixels(buf.data(), frameWidth, frameHeight / 2, 4);
+			pix[i].setFromPixels(reinterpret_cast<uint8_t*>(rawFrameBuffer.data()), frameWidth, frameHeight / 2, 4);
 			tex[i].loadData(pix[i]);
+			
 		}
 
 	}

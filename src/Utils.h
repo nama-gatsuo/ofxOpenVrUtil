@@ -13,10 +13,10 @@ namespace ofxOpenVrUtil {
 			ofLogError(__FUNCTION__) << "No property found.";
 			return "";
 		} else {
-			std::string result;
+			
 			char* buf = new char[len];
 			len = vrSys->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, prop, buf, len, &e);
-			std::string sResult = buf;
+			std::string result = buf;
 			delete[] buf;
 			return result;
 		}

@@ -8,18 +8,18 @@ namespace ofxOpenVrUtil {
 
 	class Hmd {
 	public:
-		Hmd(vr::IVRSystem* vrSys);
+		Hmd();
 		~Hmd();
 
 		void setup(vr::IVRSystem* vrSys);
 
-		const glm::mat4& getViewMatrix(vr::Hmd_Eye e) const {
+		const glm::mat4& getViewMatrix(vr::EVREye e) const {
 			return glm::inverse(hmdTransform * eye[e].transform);
 		}
-		const glm::mat4& getProjectionMatrix(vr::Hmd_Eye e) const {
+		const glm::mat4& getProjectionMatrix(vr::EVREye e) const {
 			return eye[e].proj;
 		}
-		const glm::mat4& getViewProjectionMatrix(vr::Hmd_Eye e) const {
+		const glm::mat4& getViewProjectionMatrix(vr::EVREye e) const {
 			return getProjectionMatrix(e) * getViewMatrix(e);
 		}
 

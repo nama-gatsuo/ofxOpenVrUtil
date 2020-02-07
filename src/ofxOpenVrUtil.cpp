@@ -4,8 +4,7 @@
 
 namespace ofxOpenVrUtil {
 	Interface::Interface() :
-		vrSys(nullptr),  systemName("No Driver"), modelNumber("No Display"),
-		trackedCam(vrSys), hmd(vrSys)
+		vrSys(nullptr),  systemName("No Driver"), modelNumber("No Display")
 	{}
 
 	void Interface::setup() {
@@ -24,14 +23,20 @@ namespace ofxOpenVrUtil {
 
 		// TODO: Prepare RenderModel
 		// Prepare Compositor
-		vrCompositor = vr::VRCompositor();
-		if (!vrCompositor) {
+		
+		if (!vr::VRCompositor()) {
 			ofLogError(__FUNCTION__) << "Compositor initialization failed.";
 			return;
 		}
 
 		hmd.setup(vrSys);
+		trackedCam.setup(vrSys);
+
 		trackedDevivePose.resize(vr::k_unMaxTrackedDeviceCount);
+		trackedDeviceMatrix.resize(vr::k_unMaxTrackedDeviceCount);
+
+		ofLogNotice(__FUNCTION__) << "VR System: " << systemName;
+		ofLogNotice(__FUNCTION__) << "VR Model: " << modelNumber;
 
 	}
 
@@ -44,7 +49,7 @@ namespace ofxOpenVrUtil {
 
 	}
 
-	void Interface::submit(const ofTexture& tex, vr::Hmd_Eye eye) {
+	void Interface::submit(const ofTexture& tex, vr::EVREye eye) {
 		vr::Texture_t vrTex = { (void*)(uintptr_t)(tex.getTextureData().textureID), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(eye, &vrTex);
 	}
@@ -54,10 +59,11 @@ namespace ofxOpenVrUtil {
 		vrSys = nullptr;
 	}
 
-	void Interface::beginEye(vr::Hmd_Eye eye) {
+	void Interface::beginEye(vr::EVREye eye) {
 		ofPushMatrix();
 		ofPushView();
 		ofEnableDepthTest();
+
 		ofSetMatrixMode(OF_MATRIX_PROJECTION);
 		ofLoadMatrix(hmd.getProjectionMatrix(eye));
 		ofSetMatrixMode(OF_MATRIX_MODELVIEW);
@@ -72,7 +78,7 @@ namespace ofxOpenVrUtil {
 
 	void Interface::updateTrackedDeviceMatrix() {
 
-		auto e = vrCompositor->WaitGetPoses(trackedDevivePose.data(), trackedDevivePose.size(), NULL, 0);
+		auto e = vr::VRCompositor()->WaitGetPoses(trackedDevivePose.data(), (uint32_t)trackedDevivePose.size(), NULL, 0);
 		if (e != vr::VRCompositorError_None) {
 			ofLogError(__FUNCTION__) << "Can't track device poses.";
 		}
@@ -110,6 +116,10 @@ namespace ofxOpenVrUtil {
 			}
 		
 		}
+
+		/*if (trackedDevivePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid) {
+			hmd.setTransformMatrix(trackedDeviceMatrix[vr::k_unTrackedDeviceIndex_Hmd]);
+		}*/
 
 	}
 

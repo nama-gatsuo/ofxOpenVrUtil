@@ -11,9 +11,10 @@
 namespace ofxOpenVrUtil {
 	class TrackedCamera {
 	public:
-		TrackedCamera(vr::IVRSystem* vrSys);
+		TrackedCamera();
 		~TrackedCamera();
 
+		void setup(vr::IVRSystem* vrSys);
 		bool open();
 		bool close();
 
@@ -31,6 +32,7 @@ namespace ofxOpenVrUtil {
 
 	private:
 		vr::IVRSystem* vrSys;
+		vr::IVRCompositor* vrComp;
 		vr::IVRTrackedCamera* trackedCamera;
 		vr::TrackedCameraHandle_t trackedCameraHandle;
 		
