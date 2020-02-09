@@ -9,16 +9,18 @@ namespace ofxOpenVrUtil {
 	void Controller::draw() {
 		ofPushMatrix();
 		ofMultMatrix(transform);
-		//model->tex.bind();
+		model->tex.bind();
 		model->mesh.draw();
-		//model->tex.unbind();
+		model->tex.unbind();
 		ofPopMatrix();
 	}
+	
+	
 	void ControllerManager::setup(vr::IVRSystem* vrSys) {
 		this->vrSys = vrSys;
 	}
 	bool ControllerManager::hasDevice(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role) const {
-		if (hasDevices()) return false;
+		if (!hasDevices()) return false;
 		for (auto& c : controllers) {
 			if (c.second->deviceIndex == deviceIndex && c.second->role == role) {
 				return true;
@@ -67,18 +69,21 @@ namespace ofxOpenVrUtil {
 		}
 
 		ofPtr<Model> m = std::make_shared<Model>();
-		m->tex.allocate(renderModelTex->unWidth, renderModelTex->unHeight, GL_RGBA8, false, GL_RGBA);
+		m->tex.allocate(renderModelTex->unWidth, renderModelTex->unHeight, GL_RGBA8, false);
 		m->tex.loadData(renderModelTex->rubTextureMapData, renderModelTex->unWidth, renderModelTex->unHeight, GL_RGBA);
-		
+
 		m->mesh.setMode(OF_PRIMITIVE_TRIANGLES);
 		for (int i = 0; i < renderModel->unVertexCount; i++) {
 			auto& v = renderModel->rVertexData[i];
 			m->mesh.addVertex(toGlm(v.vPosition));
 			m->mesh.addNormal(toGlm(v.vNormal));
+			ofLogNotice() << toGlm(v.rfTextureCoord);
 			m->mesh.addTexCoord(toGlm(v.rfTextureCoord));
 		}
 		for (int i = 0; i < renderModel->unTriangleCount; i++) {
-			m->mesh.addIndex(renderModel->rIndexData[i]);
+			m->mesh.addIndex(renderModel->rIndexData[i * 3 + 0]);
+			m->mesh.addIndex(renderModel->rIndexData[i * 3 + 1]);
+			m->mesh.addIndex(renderModel->rIndexData[i * 3 + 2]);
 		}
 
 		vr::VRRenderModels()->FreeRenderModel(renderModel);

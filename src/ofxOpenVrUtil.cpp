@@ -111,17 +111,12 @@ namespace ofxOpenVrUtil {
 				switch (vrSys->GetTrackedDeviceClass(i)) {
 				case vr::TrackedDeviceClass_Controller: {
 					auto controllerRole = vrSys->GetControllerRoleForTrackedDeviceIndex(i);
-					
 					if (controllers.hasDevice(i, controllerRole)) {
-						auto& m = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
-						controllers.get()[i]->setTransformMatrix(m);
-						ofLogNotice() << m;
+						controllers.get()[i]->setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
 					} else {
 						controllers.addDevice(i, controllerRole);
 					}
-					
 				} break;
-
 				case vr::TrackedDeviceClass_HMD: {
 					hmd.setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
 				} break;

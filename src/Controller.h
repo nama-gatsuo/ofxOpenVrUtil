@@ -19,7 +19,7 @@ namespace ofxOpenVrUtil {
 		Controller(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role, ofPtr<Model> model);
 		bool isConnected() { return false; }
 		void draw();
-
+		
 		const vr::TrackedDeviceIndex_t deviceIndex; // just uint32_t 0 - 64
 		const vr::ETrackedControllerRole role;
 		void setTransformMatrix(const glm::mat4& t) {
@@ -33,7 +33,6 @@ namespace ofxOpenVrUtil {
 
 	class ControllerManager {
 	public:
-		
 		void setup(vr::IVRSystem* vrSys);
 		size_t size() const { return controllers.size(); }
 		bool hasDevices() const { return !controllers.empty(); }
@@ -46,8 +45,6 @@ namespace ofxOpenVrUtil {
 		vr::IVRSystem* vrSys;
 		std::unordered_map<vr::TrackedDeviceIndex_t, ofPtr<Controller>> controllers;
 		std::unordered_map<vr::ETrackedControllerRole, ofPtr<Model>> models;
-
 	};
-
 
 }

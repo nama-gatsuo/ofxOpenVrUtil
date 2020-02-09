@@ -66,8 +66,8 @@ namespace ofxOpenVrUtil {
 		return *reinterpret_cast<const glm::vec2*>(&v);
 	}
 	
-	static const glm::vec2& toGlm(const float* v) {
-		return *reinterpret_cast<const glm::vec2*>(&v);
+	static glm::vec2 toGlm(const float* v) {
+		return glm::vec2(v[0], v[1]);
 	}
 
 }

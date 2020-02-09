@@ -125,15 +125,13 @@ namespace ofxOpenVrUtil {
 		// Load raw pixels to eye textures 
 		for (int i = 0; i < 2; i++) {
 			if (i == vr::Eye_Left) {
-				pix[i].setFromPixels(&(rawFrameBuffer.data()[bufferSize / 2]), frameWidth, frameHeight / 2, 4);
+				tex[i].loadData(&(rawFrameBuffer.data()[bufferSize / 2]), frameWidth, frameHeight / 2, GL_RGBA);
 			} else {
-				pix[i].setFromPixels(&(rawFrameBuffer.data()[0]), frameWidth, frameHeight / 2, 4);
+				tex[i].loadData(&(rawFrameBuffer.data()[0]), frameWidth, frameHeight / 2, GL_RGBA);
 			}
-			tex[i].loadData(pix[i]);
-			
+			//tex[i].loadData(pix[i]);			
 		}
 
 	}
-
 
 }
