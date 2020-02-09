@@ -2,6 +2,7 @@
 #include "openvr.h"
 #include "ofVectorMath.h"
 #include "ofCamera.h"
+#include "ofVboMesh.h"
 #include <array>
 
 namespace ofxOpenVrUtil {
@@ -28,8 +29,10 @@ namespace ofxOpenVrUtil {
 
 		void setTransformMatrix(const glm::mat4& m) { hmdTransform = m; }
 		const glm::mat4& getTransformMatrix() const { return hmdTransform; }
+		const ofVboMesh& getHiddenMesh(vr::Hmd_Eye eye) { return hiddenMesh[eye]; }
 
 	private:
+		void loadHiddenAreaMesh(vr::Hmd_Eye eye);
 		vr::IVRSystem* vrSys;
 
 		struct Eye {
@@ -40,6 +43,7 @@ namespace ofxOpenVrUtil {
 		std::array<Eye, 2> eye;
 		uint32_t eyeWidth, eyeHeight;
 		ofParameter<float> farClip, nearClip;
+		std::array<ofVboMesh, 2> hiddenMesh;
 
 		glm::mat4 hmdTransform;
 		

@@ -3,7 +3,7 @@
 
 namespace ofxOpenVrUtil {
 
-	TrackedCamera::TrackedCamera() : vrSys(nullptr), bOpen(false), bStreaming(false) {}
+	TrackedCamera::TrackedCamera() : vrSys(nullptr), trackedCamera(nullptr), bOpen(false), bStreaming(false) {}
 	TrackedCamera::~TrackedCamera() {
 		if (bStreaming) stop();
 		if (bOpen) close();
@@ -29,7 +29,7 @@ namespace ofxOpenVrUtil {
 		vr::EVRTrackedCameraError e = trackedCamera->HasCamera(vr::k_unTrackedDeviceIndex_Hmd, &bHasCamera);
 
 		if (e != vr::VRTrackedCameraError_None || !bHasCamera) {
-			ofLogError() << "No Tracked Camera Available! ( " << trackedCamera->GetCameraErrorNameFromEnum(e) << ")";
+			ofLogError(__FUNCTION__) << "No Tracked Camera Available! ( " << trackedCamera->GetCameraErrorNameFromEnum(e) << " )";
 			return false;
 		}
 
@@ -50,6 +50,7 @@ namespace ofxOpenVrUtil {
 
 		if (!bOpen || !trackedCamera) {
 			ofLogError(__FUNCTION__) << "Tracked Camera is not opened yet.";
+			return false;
 		}
 
 		uint32_t size = 0;
@@ -61,7 +62,7 @@ namespace ofxOpenVrUtil {
 		);
 
 		if (e != vr::VRTrackedCameraError_None) {
-			ofLogError() << "GetCameraFrameBounds() Failed!";
+			ofLogError(__FUNCTION__) << "GetCameraFrameBounds() Failed!";
 			return false;
 		}
 		ofLogNotice(__FUNCTION__) << "Tracked Cam input size: " << frameWidth << " x " << frameHeight << " (bufferSize: " << size << ")";
@@ -80,10 +81,10 @@ namespace ofxOpenVrUtil {
 		}
 
 		pix[vr::Eye_Left].allocate(frameWidth, frameHeight / 2, 4);
-		tex[vr::Eye_Left].allocate(frameWidth, frameHeight / 2, GL_RGBA);
+		tex[vr::Eye_Left].allocate(frameWidth, frameHeight / 2, GL_RGBA8);
 
 		pix[vr::Eye_Right].allocate(frameWidth, frameHeight / 2, 4);
-		tex[vr::Eye_Right].allocate(frameWidth, frameHeight / 2, GL_RGBA);
+		tex[vr::Eye_Right].allocate(frameWidth, frameHeight / 2, GL_RGBA8);
 
 		lastFrameCount = 0;
 		bStreaming = true;
@@ -123,16 +124,11 @@ namespace ofxOpenVrUtil {
 		
 		// Load raw pixels to eye textures 
 		for (int i = 0; i < 2; i++) {
-			std::vector<uint8_t>::iterator first, last;
 			if (i == vr::Eye_Left) {
-				first = rawFrameBuffer.begin() + bufferSize / 2;
-				last = rawFrameBuffer.end();
+				pix[i].setFromPixels(&(rawFrameBuffer.data()[bufferSize / 2]), frameWidth, frameHeight / 2, 4);
 			} else {
-				first = rawFrameBuffer.begin();
-				last = rawFrameBuffer.begin() + bufferSize / 2 - 1;
+				pix[i].setFromPixels(&(rawFrameBuffer.data()[0]), frameWidth, frameHeight / 2, 4);
 			}
-			std::vector<uint8_t> buf(first, last);
-			pix[i].setFromPixels(reinterpret_cast<uint8_t*>(rawFrameBuffer.data()), frameWidth, frameHeight / 2, 4);
 			tex[i].loadData(pix[i]);
 			
 		}

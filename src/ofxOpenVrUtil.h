@@ -5,6 +5,7 @@
 #include "ofParameter.h"
 #include "TrackedCamera.h"
 #include "Hmd.h"
+#include "Controller.h"
 
 namespace ofxOpenVrUtil {
 	
@@ -22,12 +23,16 @@ namespace ofxOpenVrUtil {
 
 		TrackedCamera& getTrackedCamera() { return trackedCam; }
 		Hmd& getHmd() { return hmd; }
+		std::unordered_map<vr::TrackedDeviceIndex_t, ofPtr<Controller>>& getControllers() { return controllers.get(); }
 
 		void beginEye(vr::EVREye eye);
 		void endEye();
 
+		void applyEyeStencil(vr::Hmd_Eye eye);
+
 	private:
 		void updateTrackedDeviceMatrix();
+		void handleInput();
 
 		ofParameterGroup group;
 
@@ -37,6 +42,8 @@ namespace ofxOpenVrUtil {
 
 		TrackedCamera trackedCam;
 		Hmd hmd;
+		ControllerManager controllers;
+
 		std::vector<glm::mat4> trackedDeviceMatrix;
 		std::vector<vr::TrackedDevicePose_t> trackedDevivePose;
 

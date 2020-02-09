@@ -32,7 +32,6 @@ namespace ofxOpenVrUtil {
 
 	private:
 		vr::IVRSystem* vrSys;
-		vr::IVRCompositor* vrComp;
 		vr::IVRTrackedCamera* trackedCamera;
 		vr::TrackedCameraHandle_t trackedCameraHandle;
 		

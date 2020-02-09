@@ -22,14 +22,14 @@ namespace ofxOpenVrUtil {
 		modelNumber = getPropString(vrSys, vr::Prop_ModelNumber_String);
 
 		// TODO: Prepare RenderModel
-		// Prepare Compositor
-		
+
 		if (!vr::VRCompositor()) {
 			ofLogError(__FUNCTION__) << "Compositor initialization failed.";
 			return;
 		}
 
 		hmd.setup(vrSys);
+		controllers.setup(vrSys);
 		trackedCam.setup(vrSys);
 
 		trackedDevivePose.resize(vr::k_unMaxTrackedDeviceCount);
@@ -60,6 +60,9 @@ namespace ofxOpenVrUtil {
 	}
 
 	void Interface::beginEye(vr::EVREye eye) {
+
+		// TODO: 
+
 		ofPushMatrix();
 		ofPushView();
 		ofEnableDepthTest();
@@ -76,6 +79,19 @@ namespace ofxOpenVrUtil {
 		ofPopView();
 	}
 
+	void Interface::applyEyeStencil(vr::Hmd_Eye eye) {
+		glClear(GL_STENCIL_BUFFER_BIT);
+		glEnable(GL_STENCIL_TEST);
+
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
+
+		hmd.getHiddenMesh(eye).draw();
+
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+	}
+
 	void Interface::updateTrackedDeviceMatrix() {
 
 		auto e = vr::VRCompositor()->WaitGetPoses(trackedDevivePose.data(), (uint32_t)trackedDevivePose.size(), NULL, 0);
@@ -83,6 +99,8 @@ namespace ofxOpenVrUtil {
 			ofLogError(__FUNCTION__) << "Can't track device poses.";
 		}
 		
+		// Loop through tracked devices. Max count is 64 (vr::k_unMaxTrackedDeviceCount)
+		// Index of 0 is always HMD (vr::k_unTrackedDeviceIndex_Hmd)
 		int validPoseCount = 0;
 		for (int i = 0; i < trackedDevivePose.size(); i++) {
 			if (trackedDevivePose[i].bPoseIsValid) {
@@ -92,13 +110,16 @@ namespace ofxOpenVrUtil {
 
 				switch (vrSys->GetTrackedDeviceClass(i)) {
 				case vr::TrackedDeviceClass_Controller: {
-					auto controllerType = vrSys->GetControllerRoleForTrackedDeviceIndex(i);
-					if (controllerType == vr::TrackedControllerRole_LeftHand) {
-						// TODO: store controller mat
-					} else if (controllerType == vr::TrackedControllerRole_RightHand) {
-						// TODO: store controller mat
+					auto controllerRole = vrSys->GetControllerRoleForTrackedDeviceIndex(i);
+					
+					if (controllers.hasDevice(i, controllerRole)) {
+						auto& m = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+						controllers.get()[i]->setTransformMatrix(m);
+						ofLogNotice() << m;
 					} else {
+						controllers.addDevice(i, controllerRole);
 					}
+					
 				} break;
 
 				case vr::TrackedDeviceClass_HMD: {
@@ -116,10 +137,21 @@ namespace ofxOpenVrUtil {
 			}
 		
 		}
-
+		
 		/*if (trackedDevivePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid) {
 			hmd.setTransformMatrix(trackedDeviceMatrix[vr::k_unTrackedDeviceIndex_Hmd]);
 		}*/
+
+	}
+
+	void Interface::handleInput() {
+		vr::VREvent_t ev;
+		while (vrSys->PollNextEvent(&ev, sizeof(vr::VREvent_t))) {
+			
+			// processEvent(ev);
+		}
+		
+
 
 	}
 
