@@ -44,6 +44,7 @@ namespace ofxOpenVrUtil {
 
 		updateTrackedDeviceMatrix();
 		// TODO: handle input
+		handleInput();
 
 		if (trackedCam.isStreaming()) trackedCam.update();
 
@@ -60,9 +61,6 @@ namespace ofxOpenVrUtil {
 	}
 
 	void Interface::beginEye(vr::EVREye eye) {
-
-		// TODO: 
-
 		ofPushMatrix();
 		ofPushView();
 		ofEnableDepthTest();
@@ -132,10 +130,6 @@ namespace ofxOpenVrUtil {
 			}
 		
 		}
-		
-		/*if (trackedDevivePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid) {
-			hmd.setTransformMatrix(trackedDeviceMatrix[vr::k_unTrackedDeviceIndex_Hmd]);
-		}*/
 
 	}
 
@@ -143,7 +137,32 @@ namespace ofxOpenVrUtil {
 		vr::VREvent_t ev;
 		while (vrSys->PollNextEvent(&ev, sizeof(vr::VREvent_t))) {
 			
-			// processEvent(ev);
+			// https://github.com/ValveSoftware/openvr/wiki/VREvent_t
+			// https://github.com/ValveSoftware/openvr/wiki/IVRSystem::GetControllerState
+
+			// Pick up only controller event
+			if (vrSys->GetTrackedDeviceClass(ev.trackedDeviceIndex) == vr::TrackedDeviceClass_Controller) {
+				
+				vr::VRControllerState_t controllerState;
+				vrSys->GetControllerState(ev.trackedDeviceIndex, &controllerState, sizeof(vr::VRControllerState_t));
+				
+				// ev.eventType ->  EVREventType
+				// ev.data.controller.button -> EVRButtonId
+				// 
+				// uint64_t mask = vr::ButtonMaskFromId(static_cast<vr::EVRButtonId>(ev.data.controller.button));
+				// bool pressed = mask & controllerState.ulButtonPressed;
+				
+				switch (ev.data.controller.button) {
+				case vr::k_EButton_SteamVR_Touchpad: {
+
+				} break;
+				case vr::k_EButton_SteamVR_Trigger: {
+
+				} break;
+				}
+
+			}
+
 		}
 		
 
