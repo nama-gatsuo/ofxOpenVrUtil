@@ -80,14 +80,16 @@ namespace ofxOpenVrUtil {
 	void Interface::applyEyeStencil(vr::Hmd_Eye eye) {
 		glClear(GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_STENCIL_TEST);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
-
+		ofSetColor(0, 0);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF); // all fragments should update the stencil buffer
+		glStencilMask(0xFF); // enable writing to the stencil buffer
 		hmd.getHiddenMesh(eye).draw();
 
+		ofSetColor(255);
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
+		glStencilMask(0x00); // disable writing to the stencil buffer
 	}
 
 	void Interface::updateTrackedDeviceMatrix() {

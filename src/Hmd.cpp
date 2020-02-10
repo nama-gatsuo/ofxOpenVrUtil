@@ -12,6 +12,7 @@ namespace ofxOpenVrUtil {
 
 		if (!vrSys) ofLogError(__FUNCTION__) << "IVRSystem is not initialized.";
 		
+
 		nearClip = 0.1f;
 		farClip = 30.f;
 
@@ -21,18 +22,22 @@ namespace ofxOpenVrUtil {
 
 			loadHiddenAreaMesh(static_cast<vr::Hmd_Eye>(i));
 		}
-
-		vrSys->GetRecommendedRenderTargetSize(&eyeWidth, &eyeHeight);
-		ofLogNotice(__FUNCTION__) << "Recommeded Render Size (per eye): " << eyeWidth << " x " << eyeHeight;
-
  	}
+
 	void Hmd::loadHiddenAreaMesh(vr::Hmd_Eye eye) {
 		if (!vrSys) ofLogError(__FUNCTION__) << "IVRSystem is not initialized.";
 
 		const vr::HiddenAreaMesh_t& am = vrSys->GetHiddenAreaMesh(eye);
 		hiddenMesh[eye].setMode(OF_PRIMITIVE_TRIANGLES);
 		for (int i = 0; i < am.unTriangleCount; i++) {
-			hiddenMesh[eye].addVertex(glm::vec3(toGlm(am.pVertexData[i]), 0));
+			for (int j = 0; j < 3; j++) {
+				hiddenMesh[eye].addVertex(glm::vec3(
+					am.pVertexData[i * 3 + j].v[0] * float(eyeWidth),
+					am.pVertexData[i * 3 + j].v[1] * float(eyeHeight),
+					0)
+				);
+			}
+			
 		}
 
 		if (hiddenMesh[eye].hasVertices()) {

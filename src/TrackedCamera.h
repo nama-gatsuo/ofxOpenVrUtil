@@ -7,6 +7,8 @@
 #include "ofVectorMath.h"
 #include "ofTexture.h"
 #include "ofPixels.h"
+#include "ofVboMesh.h"
+#include "ofShader.h"
 
 namespace ofxOpenVrUtil {
 	class TrackedCamera {
@@ -15,20 +17,17 @@ namespace ofxOpenVrUtil {
 		~TrackedCamera();
 
 		void setup(vr::IVRSystem* vrSys);
-		bool open();
-		bool close();
 
 		bool start();
 		bool stop();
-
-		bool isOpen() const { return bOpen; }
 		bool isStreaming() const { return bStreaming; }
 
 		void update();
 
-		const ofTexture getTexture(vr::Hmd_Eye eye) const {
-			return tex[eye];
-		}
+
+		void draw(vr::Hmd_Eye eye);
+
+		uint32_t getTexId() { return texId; }
 
 	private:
 		vr::IVRSystem* vrSys;
@@ -37,12 +36,13 @@ namespace ofxOpenVrUtil {
 		
 		uint32_t frameWidth, frameHeight;
 		uint32_t bufferSize;
-		std::vector<uint8_t> rawFrameBuffer;
-		std::array<ofTexture, 2> tex;
-		std::array<ofPixels, 2> pix;
-		uint32_t lastFrameCount;
+		
+		uint32_t texId;
+		ofShader bindTex;
 
-		bool bOpen;
+		uint32_t lastFrameCount;
+		std::array<ofVboMesh, 2> rect;
+
 		bool bStreaming;
 	};
 }

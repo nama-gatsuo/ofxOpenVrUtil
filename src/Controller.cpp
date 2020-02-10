@@ -77,7 +77,6 @@ namespace ofxOpenVrUtil {
 			auto& v = renderModel->rVertexData[i];
 			m->mesh.addVertex(toGlm(v.vPosition));
 			m->mesh.addNormal(toGlm(v.vNormal));
-			ofLogNotice() << toGlm(v.rfTextureCoord);
 			m->mesh.addTexCoord(toGlm(v.rfTextureCoord));
 		}
 		for (int i = 0; i < renderModel->unTriangleCount; i++) {

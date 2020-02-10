@@ -1,12 +1,8 @@
 #pragma once
 
-//Example of rendering simplest primitives in VR:
-//points, lines, triangle
-//NOTE: here is rendering without shader.
-//For example with shader - see example-drawing.
-
 #include "ofMain.h"
 #include "ofxOpenVrUtil.h"
+#include "ofxGui.h"
 
 class ofApp : public ofBaseApp{
 
@@ -21,4 +17,10 @@ class ofApp : public ofBaseApp{
 private:
 	ofxOpenVrUtil::Interface vr;
 	std::array<ofFbo, 2> eyeFbo;
+
+	ofxPanel panel;
+	ofParameter<float> eyeScale;
+	ofParameter<glm::vec2> eyeOffset;
+
+	ofShader bindTex;
 };

@@ -3,7 +3,6 @@
 void ofApp::setup() {
 	ofSetVerticalSync(false);
 	vr.setup();
-	vr.getTrackedCamera().open();
 	vr.getTrackedCamera().start();
 
 	int eyeWidth = vr.getHmd().getEyeWidth();
@@ -17,13 +16,18 @@ void ofApp::setup() {
 	s.minFilter = GL_NEAREST;
 	s.numSamples = 4; // MSAA enabled. Anti-Alising is much important for VR experience
 	s.textureTarget = GL_TEXTURE_2D; // Can't use GL_TEXTURE_RECTANGLE_ARB which is default in oF
-	s.internalformat = GL_RGBA;
+	s.internalformat = GL_RGBA8;
 	s.useDepth = true;
 	s.useStencil = true;
 
 	for (auto& f : eyeFbo) {
 		f.allocate(s);
 	}
+
+	panel.setup();
+	panel.add(eyeScale.set("eyeScale", 3.f, 2.f, 4.f));
+	panel.add(eyeOffset.set("eyeOffset", glm::vec2(10), glm::vec2(-500), glm::vec2(500)));
+	
 
 }
 
@@ -40,20 +44,25 @@ void ofApp::update(){
 		
 		eyeFbo[i].begin();
 		ofClear(0);
-		//vr.applyEyeStencil(static_cast<vr::Hmd_Eye>(i));	
-		vr.getHmd().getHiddenMesh(static_cast<vr::Hmd_Eye>(i)).draw();
-		/*if (vr.getTrackedCamera().isStreaming()) {
-			float camScale = 1.8;
-			auto& t = vr.getTrackedCamera().getTexture(static_cast<vr::Hmd_Eye>(i));
+		vr.applyEyeStencil(static_cast<vr::Hmd_Eye>(i));
 
+		if (vr.getTrackedCamera().isStreaming()) {
+		
+			
 			ofSetRectMode(OF_RECTMODE_CENTER);
 			ofPushMatrix();
 			ofTranslate(eyeFbo[i].getWidth() / 2, eyeFbo[i].getHeight() / 2);
-			ofScale(camScale);
-			t.draw(0, 0);
+			ofTranslate(pow(-1, i) * eyeOffset->x, eyeOffset->y);
+			ofScale(eyeScale);
+
+			vr.getTrackedCamera().draw(static_cast<vr::Hmd_Eye>(i));
+			//ofMesh::plane(t.getWidth(), t.getHeight(), 2, 2).draw();
+
+			//t.draw(0, 0);
 			ofPopMatrix();
 			ofSetRectMode(OF_RECTMODE_CORNER);
-		}*/
+			
+		}
 		
 		vr.beginEye(static_cast<vr::Hmd_Eye>(i));
 		drawCall();
@@ -75,15 +84,19 @@ void ofApp::draw(){
 	int w = vr.getHmd().getEyeWidth();
 	int h = vr.getHmd().getEyeHeight();
 
-	eyeFbo[vr::Eye_Left].draw(0, 0, w / 3, h / 3);
-	eyeFbo[vr::Eye_Right].draw(w / 3, 0, w / 3, h / 3);
+	
+	ofPushMatrix();
+	ofScale(1.f / 4.f);
+	eyeFbo[vr::Eye_Left].draw(0, 0, w, h);
+	eyeFbo[vr::Eye_Right].draw(w, 0, w, h);
+	ofPopMatrix();
 
 	ofDrawBitmapString("fps: " + ofToString(ofGetFrameRate()), 12, 16);
 	
+	panel.draw();
 }
 
 void ofApp::exit() {
 	vr.getTrackedCamera().stop();
-	vr.getTrackedCamera().close();
 	vr.exit();
 }
