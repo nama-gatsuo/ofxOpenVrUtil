@@ -12,15 +12,9 @@ class ofApp : public ofBaseApp{
 		void draw();
 		
 		void exit();
-
+		void keyPressed(int key);
 		
 private:
 	ofxOpenVrUtil::Interface vr;
 	std::array<ofFbo, 2> eyeFbo;
-
-	ofxPanel panel;
-	ofParameter<float> eyeScale;
-	ofParameter<glm::vec2> eyeOffset;
-
-	ofShader bindTex;
 };

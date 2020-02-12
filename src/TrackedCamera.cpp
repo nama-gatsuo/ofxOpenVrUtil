@@ -159,7 +159,7 @@ namespace ofxOpenVrUtil {
 	}
 
 	void TrackedCamera::draw(vr::Hmd_Eye eye) {
-
+		ofDisableDepthTest();
 		bindTex.begin();
 		glActiveTexture(GL_TEXTURE0 + 0);
 		glClientActiveTexture(GL_TEXTURE0 + 0);
@@ -181,7 +181,7 @@ namespace ofxOpenVrUtil {
 		glActiveTexture(GL_TEXTURE0);
 
 		bindTex.end();
-		
+		ofEnableDepthTest();
 	}
 
 }

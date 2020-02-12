@@ -3,7 +3,6 @@
 void ofApp::setup() {
 	ofSetVerticalSync(false);
 	vr.setup();
-	vr.getTrackedCamera().start();
 
 	int eyeWidth = vr.getHmd().getEyeWidth();
 	int eyeHeight = vr.getHmd().getEyeHeight();
@@ -24,11 +23,6 @@ void ofApp::setup() {
 		f.allocate(s);
 	}
 
-	panel.setup();
-	panel.add(eyeScale.set("eyeScale", 3.f, 2.f, 4.f));
-	panel.add(eyeOffset.set("eyeOffset", glm::vec2(10), glm::vec2(-500), glm::vec2(500)));
-	
-
 }
 
 void ofApp::update(){
@@ -36,8 +30,17 @@ void ofApp::update(){
 	
 	auto drawCall = [&]() {
 		ofNoFill();
-		ofDrawBox(glm::vec3(0), 1.f);
 		ofDrawAxis(3.);
+
+		ofPushMatrix();
+		ofTranslate(0, 1.5, 0);
+		for (int i = 0; i < 24; i++) {
+			ofRotateY(1.f + ofGetElapsedTimef() * 1.f);
+			ofRotateZ(-1.f + ofGetElapsedTimef() * 2.f);
+			ofDrawBox(glm::vec3(0), .3f);
+		}
+		ofPopMatrix();
+		
 	};
 
 	for (int i = 0; i < 2; i++) {
@@ -70,7 +73,6 @@ void ofApp::draw(){
 	int w = vr.getHmd().getEyeWidth();
 	int h = vr.getHmd().getEyeHeight();
 
-	
 	ofPushMatrix();
 	ofScale(1.f / 4.f);
 	eyeFbo[vr::Eye_Left].draw(0, 0, w, h);
@@ -79,10 +81,19 @@ void ofApp::draw(){
 
 	ofDrawBitmapString("fps: " + ofToString(ofGetFrameRate()), 12, 16);
 	
-	panel.draw();
 }
 
 void ofApp::exit() {
 	if (vr.getTrackedCamera().isStreaming()) vr.getTrackedCamera().stop();
 	vr.exit();
+}
+
+void ofApp::keyPressed(int key) {
+	if (key == ' ') {
+		if (vr.getTrackedCamera().isStreaming()) {
+			vr.getTrackedCamera().stop();
+		} else {
+			vr.getTrackedCamera().start();
+		}
+	}
 }

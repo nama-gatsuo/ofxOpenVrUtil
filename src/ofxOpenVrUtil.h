@@ -25,9 +25,16 @@ namespace ofxOpenVrUtil {
 		Hmd& getHmd() { return hmd; }
 		std::unordered_map<vr::TrackedDeviceIndex_t, ofPtr<Controller>>& getControllers() { return controllers.get(); }
 
+		/* Apply HMD ModelView transformation per eye */
 		void beginEye(vr::EVREye eye);
 		void endEye();
 
+		/*
+		Apply stencil test of hidden area.
+		VR display has the lens distortion thus has unnecessary pixels from frame buffer rectangle.
+		This function enables to avoid pixel to be renderred with Hidden Area Mesh stencil.
+		Only HTC Vive has Hidden Area Mesh stencil, Oculus doesn't.
+		*/
 		void applyEyeStencil(vr::Hmd_Eye eye);
 
 	private:
