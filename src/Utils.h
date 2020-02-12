@@ -3,6 +3,9 @@
 #include "ofLog.h"
 
 namespace ofxOpenVrUtil {
+
+	const static std::string shaderPath("../../../../../addons/ofxOpenVrUtil/shader/");
+
 	static std::string getPropString(vr::IVRSystem * vrSys, vr::TrackedDeviceProperty prop) {
 		if (!vrSys) ofLogError(__FUNCTION__) << "IVRSystem is not initialized.";
 

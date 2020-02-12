@@ -83,7 +83,7 @@ namespace ofxOpenVrUtil {
 
 		}
 
-		bindTex.load("shader/tex");
+		bindTex.load(shaderPath + "tex");
 
 		// This plane's aspect ratio is kinda magic number.
 		// 1:1 didn't work with projection matrix, but 2:1 looks to work nicely.
