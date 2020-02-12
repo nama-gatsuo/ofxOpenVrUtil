@@ -30,6 +30,8 @@ void ofApp::update(){
 	
 	auto drawCall = [&]() {
 		ofNoFill();
+
+		drawGrid();
 		ofDrawAxis(3.);
 
 		ofPushMatrix();
@@ -37,7 +39,7 @@ void ofApp::update(){
 		for (int i = 0; i < 24; i++) {
 			ofRotateY(1.f + ofGetElapsedTimef() * 1.f);
 			ofRotateZ(-1.f + ofGetElapsedTimef() * 2.f);
-			ofDrawBox(glm::vec3(0), .3f);
+			ofDrawBox(glm::vec3(0), .6f);
 		}
 		ofPopMatrix();
 	};
@@ -49,12 +51,13 @@ void ofApp::update(){
 		vr.applyEyeStencil(static_cast<vr::Hmd_Eye>(i));
 		vr.beginEye(static_cast<vr::Hmd_Eye>(i));
 		{
+		
 			if (vr.getTrackedCamera().isStreaming()) {
 				vr.getTrackedCamera().draw(static_cast<vr::Hmd_Eye>(i));
 			}
 
 			drawCall();
-
+			
 			for (auto& c : vr.getControllers()) {
 				c.second->draw();
 			}
@@ -97,3 +100,32 @@ void ofApp::keyPressed(int key) {
 		}
 	}
 }
+
+void ofApp::drawGrid() {
+	ofPushStyle();
+	{
+		ofSetColor(100);
+		for (float x = -1.5f; x <= 1.5f; x += 1.f) {
+			ofDrawLine(x, 0, -2.f, x, 0, 2.f);
+		}
+		for (float y = -1.5f; y <= 1.5f; y += 1.f) {
+			ofDrawLine(-2.f, 0, y, 2.f, 0, y);
+		}
+	}
+	{
+		ofSetColor(196);
+		for (float x = -2.f; x <= 2.f; x += 1.f) {
+			if (x != 0.f) ofDrawLine(x, 0, -2.f, x, 0, 2.f);
+		}
+		for (float y = -2.f; y <= 2.f; y += 1.f) {
+			if (y != 0.f) ofDrawLine(-2.f, 0, y, 2.f, 0, y);
+		}
+	}
+
+	ofSetColor(255, 0, 128);
+	ofDrawLine(-2.f, 0, 0, 2.f, 0, 0);
+	ofDrawLine(0, 0, -2.f, 0, 0, 2.f);
+
+	ofPopStyle();
+}
+
