@@ -9,8 +9,8 @@ void ofApp::setup() {
 
 	// Let's prepare fbos to be renderred for each eye
 	ofFboSettings s;
-	s.width = eyeWidth;   // Actual rendering resolution is higer than actual display(HMD) has,
-	s.height = eyeHeight; // because VR system will distort images like barrel distortion and fit it to display through lens
+	s.width = eyeWidth;   // Actual rendering resolution is higer than display(HMD) spec has,
+	s.height = eyeHeight; // because VR system will distort images like barrel distortion and fit them through lens
 	s.maxFilter = GL_LINEAR;
 	s.minFilter = GL_LINEAR;
 	s.numSamples = 4; // MSAA enabled. Anti-Alising is much important for VR experience
@@ -40,7 +40,6 @@ void ofApp::update(){
 			ofDrawBox(glm::vec3(0), .3f);
 		}
 		ofPopMatrix();
-		
 	};
 
 	for (int i = 0; i < 2; i++) {
@@ -64,6 +63,7 @@ void ofApp::update(){
 		vr.endEye();
 		eyeFbo[i].end();
 
+		// Submit texture to VR!
 		vr.submit(eyeFbo[i].getTexture(), static_cast<vr::EVREye>(i));
 	}
 
