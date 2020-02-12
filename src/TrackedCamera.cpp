@@ -1,5 +1,6 @@
 #include "TrackedCamera.h"
 #include "Utils.h"
+#include "ofGraphics.h"
 
 namespace ofxOpenVrUtil {
 
@@ -19,6 +20,7 @@ namespace ofxOpenVrUtil {
 		trackedCamera = vr::VRTrackedCamera();
 		if (!trackedCamera) {
 			ofLogError(__FUNCTION__) << "Unable to get Tracked Camera interface.";
+			return;
 		}
 
 		bool bHasCamera = false;
@@ -26,40 +28,79 @@ namespace ofxOpenVrUtil {
 
 		if (e != vr::VRTrackedCameraError_None || !bHasCamera) {
 			ofLogError(__FUNCTION__) << "No Tracked Camera Available! ( " << trackedCamera->GetCameraErrorNameFromEnum(e) << " )";
+			return;
 		}
 
 		std::string camFirmwareDisc = getPropString(vrSys, vr::Prop_CameraFirmwareDescription_String);
 		ofLogNotice(__FUNCTION__) << "Camera Firmware: " << camFirmwareDisc;
+		{
+			uint32_t size = 0;
+			vr::EVRTrackedCameraError e = trackedCamera->GetCameraFrameSize(
+				vr::k_unTrackedDeviceIndex_Hmd,
+				vr::VRTrackedCameraFrameType_Undistorted,
+				&frameWidth, &frameHeight, &size
+			);
 
-		uint32_t size = 0;
-		// Allocate for camera frame buffer requirements
-		e = trackedCamera->GetCameraFrameSize(
-			vr::k_unTrackedDeviceIndex_Hmd,
-			vr::VRTrackedCameraFrameType_Undistorted,
-			&frameWidth, &frameHeight, &size
-		);
-
-		if (e != vr::VRTrackedCameraError_None) {
-			ofLogError(__FUNCTION__) << "GetCameraFrameBounds() Failed!";
+			if (e != vr::VRTrackedCameraError_None) {
+				ofLogError(__FUNCTION__) << "GetCameraFrameBounds() Failed! ( " << trackedCamera->GetCameraErrorNameFromEnum(e) << " )";
+				return;
+			}
+			ofLogNotice(__FUNCTION__) << "Tracked Cam input size: " << frameWidth << " x " << frameHeight << " (bufferSize: " << size << ")";
 		}
-		ofLogNotice(__FUNCTION__) << "Tracked Cam input size: " << frameWidth << " x " << frameHeight << " (bufferSize: " << size << ")";
+
+		// Get inverse of camera projection matrix so that we can scale texture
+		{
+			
+			for (int i = 0; i < 2; i++) {
+				vr::HmdMatrix44_t mat;
+				vr::EVRTrackedCameraError e = trackedCamera->GetCameraProjection(vr::k_unTrackedDeviceIndex_Hmd, i, vr::VRTrackedCameraFrameType_Undistorted, 1.f, -1.f, &mat);
+				
+				cam[i].invProj = glm::inverse(toGlm(mat));
+
+				if (e != vr::VRTrackedCameraError_None) {
+					ofLogError(__FUNCTION__) << "GetCameraProjection() - " << i << " Failed! ( " << trackedCamera->GetCameraErrorNameFromEnum(e) << " )";
+				}
+			}
+
+		}
+		
+		// Get Camera to Hmd transform matrix which means local matrix
+		// But currently camera transform doesn't work.
+		// Only work with device transform
+		{
+			vr::ETrackedPropertyError e;
+			std::vector<vr::HmdMatrix34_t> mat(2);
+			vrSys->GetArrayTrackedDeviceProperty(
+				vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_CameraToHeadTransforms_Matrix34_Array,
+				vr::k_unHmdMatrix34PropertyTag, (void*)mat.data(), sizeof(vr::HmdMatrix34_t) * 2, &e
+			);
+			if (e != vr::TrackedProp_Success) {
+				ofLogError(__FUNCTION__) << "Can't get Prop_CameraToHeadTransforms_Matrix34_Array ( " << vrSys->GetPropErrorNameFromEnum(e) << " )";
+			}
+
+			cam[0].transform = toGlm(mat[0]);
+			cam[1].transform = toGlm(mat[1]);
+
+		}
 
 		bindTex.load("shader/tex");
 
-		rect[0] = ofMesh::plane(frameWidth, frameHeight / 2, 2, 2);
-		rect[1] = ofMesh::plane(frameWidth, frameHeight / 2, 2, 2);
+		// This plane's aspect ratio is kinda magic number.
+		// 1:1 didn't work with projection matrix, but 2:1 looks to work nicely.
+		cam[0].rect = ofMesh::plane(2, 1, 2, 2);
+		cam[1].rect = ofMesh::plane(2, 1, 2, 2);
 
-		rect[vr::Eye_Left].clearTexCoords();
-		rect[vr::Eye_Left].addTexCoord(glm::vec2(0, 1));
-		rect[vr::Eye_Left].addTexCoord(glm::vec2(1, 1));
-		rect[vr::Eye_Left].addTexCoord(glm::vec2(0, 0.5));
-		rect[vr::Eye_Left].addTexCoord(glm::vec2(1, 0.5));
-
-		rect[vr::Eye_Right].clearTexCoords();
-		rect[vr::Eye_Right].addTexCoord(glm::vec2(0, 0.5));
-		rect[vr::Eye_Right].addTexCoord(glm::vec2(1, 0.5));
-		rect[vr::Eye_Right].addTexCoord(glm::vec2(0, 0));
-		rect[vr::Eye_Right].addTexCoord(glm::vec2(1, 0));
+		cam[vr::Eye_Left].rect.clearTexCoords();
+		cam[vr::Eye_Left].rect.addTexCoord(glm::vec2(0, 1));
+		cam[vr::Eye_Left].rect.addTexCoord(glm::vec2(1, 1));
+		cam[vr::Eye_Left].rect.addTexCoord(glm::vec2(0, 0.5));
+		cam[vr::Eye_Left].rect.addTexCoord(glm::vec2(1, 0.5));
+		
+		cam[vr::Eye_Right].rect.clearTexCoords();
+		cam[vr::Eye_Right].rect.addTexCoord(glm::vec2(0, 0.5));
+		cam[vr::Eye_Right].rect.addTexCoord(glm::vec2(1, 0.5));
+		cam[vr::Eye_Right].rect.addTexCoord(glm::vec2(0, 0));
+		cam[vr::Eye_Right].rect.addTexCoord(glm::vec2(1, 0));
 
 	}
 
@@ -69,7 +110,6 @@ namespace ofxOpenVrUtil {
 			ofLogError(__FUNCTION__) << "Tracked Camera is not opened yet.";
 			return false;
 		}
-
 		
 		trackedCamera->AcquireVideoStreamingService(vr::k_unTrackedDeviceIndex_Hmd, &trackedCameraHandle);
 		if (trackedCameraHandle == INVALID_TRACKED_CAMERA_HANDLE) {
@@ -96,36 +136,30 @@ namespace ofxOpenVrUtil {
 	void TrackedCamera::update() {
 		
 		vr::CameraVideoStreamFrameHeader_t frameHeader;
-		vr::EVRTrackedCameraError nCameraError = trackedCamera->GetVideoStreamTextureGL(trackedCameraHandle, vr::VRTrackedCameraFrameType_Undistorted, nullptr, &frameHeader, sizeof(frameHeader));
-		if (nCameraError != vr::VRTrackedCameraError_None) return;
+		vr::EVRTrackedCameraError e = trackedCamera->GetVideoStreamTextureGL(trackedCameraHandle, vr::VRTrackedCameraFrameType_Undistorted, nullptr, &frameHeader, sizeof(frameHeader));
+		if (e != vr::VRTrackedCameraError_None) {
+			ofLogError(__FUNCTION__) << trackedCamera->GetCameraErrorNameFromEnum(e);
+			return;
+		}
 		if (frameHeader.nFrameSequence == lastFrameCount) {
 			// frame hasn't changed yet, nothing to do
 			return;
 		}
-		//ofLogNotice() << tex[1].getTextureData().textureID;
-		nCameraError = trackedCamera->GetVideoStreamTextureGL(trackedCameraHandle, vr::VRTrackedCameraFrameType_Undistorted, &texId, &frameHeader, sizeof(frameHeader));
+		
+		e = trackedCamera->GetVideoStreamTextureGL(trackedCameraHandle, vr::VRTrackedCameraFrameType_Undistorted, &texId, &frameHeader, sizeof(frameHeader));
 
-		//nCameraError = trackedCamera->GetVideoStreamFrameBuffer(trackedCameraHandle, vr::VRTrackedCameraFrameType_Undistorted, rawFrameBuffer.data(), bufferSize, &frameHeader, sizeof(frameHeader));
-		if (nCameraError != vr::VRTrackedCameraError_None) {
-			ofLogError(__FUNCTION__) << nCameraError;
+		if (e != vr::VRTrackedCameraError_None) {
+			ofLogError(__FUNCTION__) << trackedCamera->GetCameraErrorNameFromEnum(e);
 			return;
 		}
-
+		deviceTransform = toGlm(frameHeader.trackedDevicePose.mDeviceToAbsoluteTracking);
 		lastFrameCount = frameHeader.nFrameSequence;
 		
-		// Load raw pixels to eye textures 
-		//for (int i = 0; i < 2; i++) {
-		//	if (i == vr::Eye_Left) {
-		//		tex[i].loadData(&(rawFrameBuffer.data()[bufferSize / 2]), frameWidth, frameHeight / 2, GL_RGBA);
-		//	} else {
-		//		tex[i].loadData(&(rawFrameBuffer.data()[0]), frameWidth, frameHeight / 2, GL_RGBA);
-		//	}
-		//	//tex[i].loadData(pix[i]);			
-		//}
 
 	}
 
 	void TrackedCamera::draw(vr::Hmd_Eye eye) {
+
 		bindTex.begin();
 		glActiveTexture(GL_TEXTURE0 + 0);
 		glClientActiveTexture(GL_TEXTURE0 + 0);
@@ -134,7 +168,12 @@ namespace ofxOpenVrUtil {
 
 		bindTex.setUniform1i("tex", 0);
 
-		rect[eye].draw();
+		ofPushMatrix();
+		ofMultMatrix(deviceTransform);
+		ofMultMatrix(cam[eye].invProj); // Scaling texture
+		
+		cam[eye].rect.draw();
+		ofPopMatrix();
 
 		glActiveTexture(GL_TEXTURE0 + 0);
 		glBindTexture(0, 0);
@@ -142,6 +181,7 @@ namespace ofxOpenVrUtil {
 		glActiveTexture(GL_TEXTURE0);
 
 		bindTex.end();
+		
 	}
 
 }

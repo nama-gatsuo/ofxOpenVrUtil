@@ -23,8 +23,7 @@ namespace ofxOpenVrUtil {
 		bool isStreaming() const { return bStreaming; }
 
 		void update();
-
-
+		
 		void draw(vr::Hmd_Eye eye);
 
 		uint32_t getTexId() { return texId; }
@@ -41,7 +40,14 @@ namespace ofxOpenVrUtil {
 		ofShader bindTex;
 
 		uint32_t lastFrameCount;
-		std::array<ofVboMesh, 2> rect;
+		struct Cam {
+			ofVboMesh rect;
+			glm::mat4 invProj;
+			glm::mat4 transform;
+		};
+		glm::mat4 deviceTransform;
+
+		std::array<Cam, 2> cam;
 
 		bool bStreaming;
 	};

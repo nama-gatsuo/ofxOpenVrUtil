@@ -12,8 +12,8 @@ void ofApp::setup() {
 	ofFboSettings s;
 	s.width = eyeWidth;   // Actual rendering resolution is higer than actual display(HMD) has,
 	s.height = eyeHeight; // because VR system will distort images like barrel distortion and fit it to display through lens
-	s.maxFilter = GL_NEAREST;
-	s.minFilter = GL_NEAREST;
+	s.maxFilter = GL_LINEAR;
+	s.minFilter = GL_LINEAR;
 	s.numSamples = 4; // MSAA enabled. Anti-Alising is much important for VR experience
 	s.textureTarget = GL_TEXTURE_2D; // Can't use GL_TEXTURE_RECTANGLE_ARB which is default in oF
 	s.internalformat = GL_RGBA8;
@@ -45,34 +45,20 @@ void ofApp::update(){
 		eyeFbo[i].begin();
 		ofClear(0);
 		vr.applyEyeStencil(static_cast<vr::Hmd_Eye>(i));
-
-		if (vr.getTrackedCamera().isStreaming()) {
-		
-			
-			ofSetRectMode(OF_RECTMODE_CENTER);
-			ofPushMatrix();
-			ofTranslate(eyeFbo[i].getWidth() / 2, eyeFbo[i].getHeight() / 2);
-			ofTranslate(pow(-1, i) * eyeOffset->x, eyeOffset->y);
-			ofScale(eyeScale);
-
-			vr.getTrackedCamera().draw(static_cast<vr::Hmd_Eye>(i));
-			//ofMesh::plane(t.getWidth(), t.getHeight(), 2, 2).draw();
-
-			//t.draw(0, 0);
-			ofPopMatrix();
-			ofSetRectMode(OF_RECTMODE_CORNER);
-			
-		}
-		
 		vr.beginEye(static_cast<vr::Hmd_Eye>(i));
-		drawCall();
+		{
+			if (vr.getTrackedCamera().isStreaming()) {
+				vr.getTrackedCamera().draw(static_cast<vr::Hmd_Eye>(i));
+			}
 
-		for (auto& c : vr.getControllers()) {
-			c.second->draw();
-		}
-		
+			drawCall();
+
+			for (auto& c : vr.getControllers()) {
+				c.second->draw();
+			}
+
+		}		
 		vr.endEye();
-
 		eyeFbo[i].end();
 
 		vr.submit(eyeFbo[i].getTexture(), static_cast<vr::EVREye>(i));
@@ -97,6 +83,6 @@ void ofApp::draw(){
 }
 
 void ofApp::exit() {
-	vr.getTrackedCamera().stop();
+	if (vr.getTrackedCamera().isStreaming()) vr.getTrackedCamera().stop();
 	vr.exit();
 }

@@ -12,6 +12,8 @@ namespace ofxOpenVrUtil {
 
 		if (!vrSys) ofLogError(__FUNCTION__) << "IVRSystem is not initialized.";
 		
+		vrSys->GetRecommendedRenderTargetSize(&eyeWidth, &eyeHeight);
+		ofLogNotice(__FUNCTION__) << "Recommeded Render Size (per eye): " << eyeWidth << " x " << eyeHeight;
 
 		nearClip = 0.1f;
 		farClip = 30.f;
@@ -41,7 +43,7 @@ namespace ofxOpenVrUtil {
 		}
 
 		if (hiddenMesh[eye].hasVertices()) {
-			ofLogNotice(__FUNCTION__) << "Hiedden Area Mesh loaded. Vertex count is " << hiddenMesh[eye].getNumVertices();
+			ofLogNotice(__FUNCTION__) << "Hiedden Area Mesh " << eye << " loaded. Vertex count is " << hiddenMesh[eye].getNumVertices();
 		} else {
 			ofLogError(__FUNCTION__) << "Can't load hiedden Area Mesh loaded. ";
 		}

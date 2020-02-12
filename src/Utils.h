@@ -58,6 +58,14 @@ namespace ofxOpenVrUtil {
 			m.m[0][3], m.m[1][3], m.m[2][3], 1.f
 		);
 	}
+	static glm::mat4 toGlmN(const vr::HmdMatrix34_t& m) {
+		return glm::mat4x4(
+			m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3],
+			m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
+			m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
+			0.f, 0.f, 0.f, 1.f
+		);
+	}
 
 	static const glm::vec3& toGlm(const vr::HmdVector3_t& v) {
 		return *reinterpret_cast<const glm::vec3*>(&v);
