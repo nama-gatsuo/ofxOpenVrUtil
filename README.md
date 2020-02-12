@@ -1,7 +1,7 @@
 # ofxOpenVrUtil
 **openFrameworks addon for bridging [OpenVR](https://github.com/ValveSoftware/openvr)**, a refactored version of [perevalovds/ofxOpenVR](https://github.com/perevalovds/ofxOpenVR).
 
-OpenVR is the open source API to access VR system via [SteamVR](https://store.steampowered.com/steamvr). Main support target is HTC VIVE (I was using VIVE PRO for developping) but it might be compatible to Oculus Rift S, Valve Index or other VR hardwares which can play SteamVR for just displaying a scene. But for major hardware vendors, such like Oculus(facebook) and HTC published native SDK which are supposed to run faster than via OpenVR.
+OpenVR is a cross-platform open source API to access VR system through [SteamVR](https://store.steampowered.com/steamvr) (by ValveSoftware). Main support target is HTC VIVE (I was using VIVE PRO for developping/debugging) but it might be compatible to Oculus Rift S, Valve Index or other VR hardwares which can play SteamVR for just displaying a scene. But for major hardware vendors, such like Oculus(facebook) and HTC published native SDK which are supposed to run faster than via OpenVR.
 
 ![](./vr.gif)
 
