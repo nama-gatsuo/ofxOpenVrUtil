@@ -3,11 +3,12 @@
 #include "ofGraphics.h"
 #include "of3dGraphics.h"
 #include "of3dUtils.h"
+#include "vrEvents.h"
 
 namespace ofxOpenVrUtil {
 	Interface::Interface() :
-		vrSys(nullptr),  systemName("No Driver"), modelNumber("No Display")
-	{}
+		vrSys(nullptr), systemName("No Driver"), modelNumber("No Display") {
+	}
 
 	void Interface::setup() {
 
@@ -22,8 +23,6 @@ namespace ofxOpenVrUtil {
 		// Get Property strings
 		systemName = getPropString(vrSys, vr::Prop_TrackingSystemName_String);
 		modelNumber = getPropString(vrSys, vr::Prop_ModelNumber_String);
-
-		// TODO: Prepare RenderModel
 
 		if (!vr::VRCompositor()) {
 			ofLogError(__FUNCTION__) << "Compositor initialization failed.";
@@ -115,7 +114,7 @@ namespace ofxOpenVrUtil {
 		if (e != vr::VRCompositorError_None) {
 			ofLogError(__FUNCTION__) << "Can't track device poses.";
 		}
-		
+
 		// Loop through tracked devices. Max count is 64 (vr::k_unMaxTrackedDeviceCount)
 		// Index of 0 is always HMD (vr::k_unTrackedDeviceIndex_Hmd)
 		int validPoseCount = 0;
@@ -126,16 +125,34 @@ namespace ofxOpenVrUtil {
 				// trackedDeviceMatrix[i] = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
 
 				switch (vrSys->GetTrackedDeviceClass(i)) {
-				case vr::TrackedDeviceClass_Controller: {
+				case vr::TrackedDeviceClass_Controller:
+				{
 					auto controllerRole = vrSys->GetControllerRoleForTrackedDeviceIndex(i);
 					if (controllers.hasDevice(i, controllerRole)) {
-						controllers.get()[i]->setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
+						glm::mat4 m = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+						auto c = controllers.get()[i];
+
+						if (c->getTransform() != m) {
+							c->setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
+
+							Event::TrackedDeviceMove e{ c->getPosition(), controllerRole, i };
+							ofNotifyEvent(Event::onControllerMove, e);
+						}
+
 					} else {
 						controllers.addDevice(i, controllerRole);
 					}
 				} break;
-				case vr::TrackedDeviceClass_HMD: {
-					hmd.setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
+				case vr::TrackedDeviceClass_HMD:
+				{
+					glm::mat4 m = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+					if (hmd.pose != m) {
+						hmd.pose = m;
+
+						Event::TrackedDeviceMove e{ hmd.getPosition(), vr::TrackedControllerRole_Invalid, i };
+						ofNotifyEvent(Event::onHmdMove, e);
+					}
+
 				} break;
 				case vr::TrackedDeviceClass_Invalid: break;
 				case vr::TrackedDeviceClass_GenericTracker: break;
@@ -147,7 +164,7 @@ namespace ofxOpenVrUtil {
 			} else {
 				continue;
 			}
-		
+
 		}
 
 	}
@@ -155,14 +172,14 @@ namespace ofxOpenVrUtil {
 	void Interface::handleInput() {
 		vr::VREvent_t ev;
 		while (vrSys->PollNextEvent(&ev, sizeof(vr::VREvent_t))) {
-			
+
 			// Pick up only controller event for now
 			if (vrSys->GetTrackedDeviceClass(ev.trackedDeviceIndex) == vr::TrackedDeviceClass_Controller) {
 				controllers.handleInput(ev);
 			}
 
 		}
-	
+
 	}
 
 }

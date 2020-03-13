@@ -8,7 +8,7 @@
 #include "Controller.h"
 
 namespace ofxOpenVrUtil {
-	
+
 
 	class Interface {
 	public:

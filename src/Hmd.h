@@ -15,7 +15,7 @@ namespace ofxOpenVrUtil {
 		void setup(vr::IVRSystem* vrSys);
 
 		const glm::mat4& getViewMatrix(vr::EVREye e) const {
-			return glm::inverse(hmdTransform * eye[e].transform);
+			return glm::inverse(pose * eye[e].transform);
 		}
 		const glm::mat4& getProjectionMatrix(vr::EVREye e) const {
 			return eye[e].proj;
@@ -23,15 +23,17 @@ namespace ofxOpenVrUtil {
 		const glm::mat4& getViewProjectionMatrix(vr::EVREye e) const {
 			return getProjectionMatrix(e) * getViewMatrix(e);
 		}
+		glm::vec3 getPosition() const { return glm::vec3(pose[3]); }
 
 		uint32_t getEyeWidth() const { return eyeWidth; }
 		uint32_t getEyeHeight() const { return eyeHeight; }
 
-		void setTransformMatrix(const glm::mat4& m) { hmdTransform = m; }
-		const glm::mat4& getTransformMatrix() const { return hmdTransform; }
+		const glm::mat4& getTransformMatrix() const { return pose; }
 		const ofVboMesh& getHiddenMesh(vr::Hmd_Eye eye) { return hiddenMesh[eye]; }
 
 	private:
+		friend class Interface;
+
 		void loadHiddenAreaMesh(vr::Hmd_Eye eye);
 		vr::IVRSystem* vrSys;
 
@@ -45,7 +47,7 @@ namespace ofxOpenVrUtil {
 		ofParameter<float> farClip, nearClip;
 		std::array<ofVboMesh, 2> hiddenMesh;
 
-		glm::mat4 hmdTransform;
-		
+		glm::mat4 pose;
+
 	};
 }

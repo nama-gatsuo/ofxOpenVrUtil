@@ -11,7 +11,7 @@ namespace ofxOpenVrUtil {
 		this->vrSys = vrSys;
 
 		if (!vrSys) ofLogError(__FUNCTION__) << "IVRSystem is not initialized.";
-		
+
 		vrSys->GetRecommendedRenderTargetSize(&eyeWidth, &eyeHeight);
 		ofLogNotice(__FUNCTION__) << "Recommeded Render Size (per eye): " << eyeWidth << " x " << eyeHeight;
 
@@ -24,7 +24,7 @@ namespace ofxOpenVrUtil {
 
 			loadHiddenAreaMesh(static_cast<vr::Hmd_Eye>(i));
 		}
- 	}
+	}
 
 	void Hmd::loadHiddenAreaMesh(vr::Hmd_Eye eye) {
 		if (!vrSys) ofLogError(__FUNCTION__) << "IVRSystem is not initialized.";
@@ -39,7 +39,7 @@ namespace ofxOpenVrUtil {
 					0)
 				);
 			}
-			
+
 		}
 
 		if (hiddenMesh[eye].hasVertices()) {

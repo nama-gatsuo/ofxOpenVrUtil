@@ -23,7 +23,7 @@ namespace ofxOpenVrUtil {
 		bool isStreaming() const { return bStreaming; }
 
 		void update();
-		
+
 		void draw(vr::Hmd_Eye eye);
 
 		uint32_t getTexId() { return texId; }
@@ -32,10 +32,10 @@ namespace ofxOpenVrUtil {
 		vr::IVRSystem* vrSys;
 		vr::IVRTrackedCamera* trackedCamera;
 		vr::TrackedCameraHandle_t trackedCameraHandle;
-		
+
 		uint32_t frameWidth, frameHeight;
 		uint32_t bufferSize;
-		
+
 		uint32_t texId;
 		ofShader bindTex;
 

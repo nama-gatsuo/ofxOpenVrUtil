@@ -58,7 +58,7 @@ namespace ofxOpenVrUtil {
 		bool hasDevice(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role) const;
 		void addDevice(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role);
 		std::unordered_map<vr::TrackedDeviceIndex_t, ofPtr<Controller>>& get() { return controllers; }
-		
+
 		void update();
 		void handleInput(const vr::VREvent_t& ev);
 

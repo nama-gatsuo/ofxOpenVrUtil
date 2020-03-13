@@ -50,11 +50,11 @@ namespace ofxOpenVrUtil {
 
 		// Get inverse of camera projection matrix so that we can scale texture
 		{
-			
+
 			for (int i = 0; i < 2; i++) {
 				vr::HmdMatrix44_t mat;
 				vr::EVRTrackedCameraError e = trackedCamera->GetCameraProjection(vr::k_unTrackedDeviceIndex_Hmd, i, vr::VRTrackedCameraFrameType_Undistorted, 1.f, -1.f, &mat);
-				
+
 				cam[i].invProj = glm::inverse(toGlm(mat));
 
 				if (e != vr::VRTrackedCameraError_None) {
@@ -63,7 +63,7 @@ namespace ofxOpenVrUtil {
 			}
 
 		}
-		
+
 		// Get Camera to Hmd transform matrix which means local matrix
 		// But currently camera transform doesn't work.
 		// Only work with device transform
@@ -95,7 +95,7 @@ namespace ofxOpenVrUtil {
 		cam[vr::Eye_Left].rect.addTexCoord(glm::vec2(1, 1));
 		cam[vr::Eye_Left].rect.addTexCoord(glm::vec2(0, 0.5));
 		cam[vr::Eye_Left].rect.addTexCoord(glm::vec2(1, 0.5));
-		
+
 		cam[vr::Eye_Right].rect.clearTexCoords();
 		cam[vr::Eye_Right].rect.addTexCoord(glm::vec2(0, 0.5));
 		cam[vr::Eye_Right].rect.addTexCoord(glm::vec2(1, 0.5));
@@ -110,7 +110,7 @@ namespace ofxOpenVrUtil {
 			ofLogError(__FUNCTION__) << "Tracked Camera is not opened yet.";
 			return false;
 		}
-		
+
 		trackedCamera->AcquireVideoStreamingService(vr::k_unTrackedDeviceIndex_Hmd, &trackedCameraHandle);
 		if (trackedCameraHandle == INVALID_TRACKED_CAMERA_HANDLE) {
 			ofLogError(__FUNCTION__) << "AcquireVideoStreamingService() Failed!";
@@ -134,7 +134,7 @@ namespace ofxOpenVrUtil {
 	}
 
 	void TrackedCamera::update() {
-		
+
 		vr::CameraVideoStreamFrameHeader_t frameHeader;
 		vr::EVRTrackedCameraError e = trackedCamera->GetVideoStreamTextureGL(trackedCameraHandle, vr::VRTrackedCameraFrameType_Undistorted, nullptr, &frameHeader, sizeof(frameHeader));
 		if (e != vr::VRTrackedCameraError_None) {
@@ -145,7 +145,7 @@ namespace ofxOpenVrUtil {
 			// frame hasn't changed yet, nothing to do
 			return;
 		}
-		
+
 		e = trackedCamera->GetVideoStreamTextureGL(trackedCameraHandle, vr::VRTrackedCameraFrameType_Undistorted, &texId, &frameHeader, sizeof(frameHeader));
 
 		if (e != vr::VRTrackedCameraError_None) {
@@ -154,7 +154,7 @@ namespace ofxOpenVrUtil {
 		}
 		deviceTransform = toGlm(frameHeader.trackedDevicePose.mDeviceToAbsoluteTracking);
 		lastFrameCount = frameHeader.nFrameSequence;
-		
+
 
 	}
 
@@ -171,7 +171,7 @@ namespace ofxOpenVrUtil {
 		ofPushMatrix();
 		ofMultMatrix(deviceTransform);
 		ofMultMatrix(cam[eye].invProj); // Scaling texture
-		
+
 		cam[eye].rect.draw();
 		ofPopMatrix();
 
