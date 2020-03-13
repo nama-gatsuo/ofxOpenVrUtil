@@ -19,18 +19,35 @@ namespace ofxOpenVrUtil {
 		Controller(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role, ofPtr<Model> model);
 		bool isConnected() { return false; }
 		void draw();
-		
-		const vr::TrackedDeviceIndex_t deviceIndex; // just uint32_t 0 - 64
-		const vr::ETrackedControllerRole role;
 
 		const glm::mat4& getTransform() const { return transform; }
+		glm::vec3 getPosition() const { return glm::vec3(transform[3]); }
+
 		void setTransformMatrix(const glm::mat4& t) {
 			transform = t;
 		}
 
+		struct ButtonState {
+			bool pressed = false;
+			bool touched = false;
+		};
+		struct AxisState {
+			glm::vec2 axis;
+			bool pressed = false;
+			bool touched = false;
+		};
+
 	private:
+		friend class ControllerManager;
+		const vr::TrackedDeviceIndex_t deviceIndex; // just uint32_t 0 - 64
+		const vr::ETrackedControllerRole role;
+
 		ofPtr<Model> model;
 		glm::mat4 transform;
+
+		std::unordered_map<int, ButtonState> buttons;
+		AxisState trigger, pad, joyStick;
+
 	};
 
 	class ControllerManager {
@@ -41,12 +58,18 @@ namespace ofxOpenVrUtil {
 		bool hasDevice(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role) const;
 		void addDevice(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role);
 		std::unordered_map<vr::TrackedDeviceIndex_t, ofPtr<Controller>>& get() { return controllers; }
+		
+		void update();
+		void handleInput(const vr::VREvent_t& ev);
+
 	private:
 		void loadModel(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role);
 
 		vr::IVRSystem* vrSys;
 		std::unordered_map<vr::TrackedDeviceIndex_t, ofPtr<Controller>> controllers;
 		std::unordered_map<vr::ETrackedControllerRole, ofPtr<Model>> models;
+
+		int lastPacketNum;
 	};
 
 }

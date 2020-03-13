@@ -1,6 +1,7 @@
 #include "Controller.h"
 #include "ofPixels.h"
 #include "ofGraphics.h"
+#include "vrEvents.h"
 
 namespace ofxOpenVrUtil {
 	Controller::Controller(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role, ofPtr<Model> model) :
@@ -14,7 +15,6 @@ namespace ofxOpenVrUtil {
 		model->tex.unbind();
 		ofPopMatrix();
 	}
-	
 	
 	void ControllerManager::setup(vr::IVRSystem* vrSys) {
 		this->vrSys = vrSys;
@@ -35,6 +35,162 @@ namespace ofxOpenVrUtil {
 		}
 		controllers[deviceIndex] = std::make_shared<Controller>(deviceIndex, role, models[role]);
 	}
+
+	void ControllerManager::update() {
+		for (auto c : controllers) {
+			auto cc = c.second;
+			vr::VRControllerState_t controllerState;
+			vrSys->GetControllerState(cc->deviceIndex, &controllerState, sizeof(vr::VRControllerState_t));
+
+			if (cc->pad.pressed || cc->pad.touched) {
+				auto axis = controllerState.rAxis[0]; // vr::k_eControllerAxis_TrackPad
+				glm::vec2 a(axis.x, axis.y);
+				if (cc->pad.axis != a) {
+					cc->pad.axis = a;
+					ofLogVerbose("controller") << "touchpad\t axis: (" << a.x << ", " << a.y << ")";
+					AxisMove e{ a, cc->deviceIndex, cc->role };
+					ofNotifyEvent(onPadUnpressed, e);
+				}
+			}
+
+			if (cc->trigger.pressed || cc->trigger.touched) {
+				auto axis = controllerState.rAxis[1]; // vr::k_eControllerAxis_Trigger
+				glm::vec2 a(axis.x, axis.y);
+				if (cc->trigger.axis != a) {
+					cc->trigger.axis = a;
+					ofLogVerbose("controller") << "trigger\t axis: (" << a.x << ")";
+					AxisMove e{ a, cc->deviceIndex, cc->role };
+					ofNotifyEvent(onTriggerUnpressed, e);
+				}
+			}
+
+			if (cc->joyStick.pressed || cc->joyStick.touched) {
+				auto axis = controllerState.rAxis[2]; // vr::k_eControllerAxis_Joystick
+				glm::vec2 a(axis.x, axis.y);
+				if (cc->joyStick.axis != a) {
+					cc->joyStick.axis = a;
+					ofLogVerbose("controller") << "joystick\t axis: (" << a.x << ")";
+					AxisMove e{ a, cc->deviceIndex, cc->role };
+					ofNotifyEvent(onJoyStickUnpressed, e);
+				}
+			}
+
+		}
+	}
+
+	void ControllerManager::handleInput(const vr::VREvent_t& ev) {
+		// https://github.com/ValveSoftware/openvr/wiki/VREvent_t
+		// https://github.com/ValveSoftware/openvr/wiki/IVRSystem::GetControllerState
+
+		vr::VRControllerState_t controllerState;
+		vrSys->GetControllerState(ev.trackedDeviceIndex, &controllerState, sizeof(vr::VRControllerState_t));
+
+		std::string evTypeStr;
+		switch (ev.eventType) {
+		case vr::VREvent_ButtonPress: evTypeStr = "pressStart"; break;
+		case vr::VREvent_ButtonUnpress: evTypeStr = "pressEnd"; break;
+		case vr::VREvent_ButtonTouch: evTypeStr = "touchStart"; break;
+		case vr::VREvent_ButtonUntouch: evTypeStr = "touchEnd"; break;
+		default: evTypeStr = "other(" + ofToString(ev.eventType) + ")"; break;
+		}
+
+		if (lastPacketNum == controllerState.unPacketNum) {
+			// ignore event because packet num is same as last
+			return;
+		}
+
+		lastPacketNum = controllerState.unPacketNum;
+
+		uint64_t mask = vr::ButtonMaskFromId(vr::EVRButtonId(ev.data.controller.button));
+		bool pressed = mask & controllerState.ulButtonPressed;
+		bool touched = mask & controllerState.ulButtonTouched;
+
+		if (controllers.find(ev.trackedDeviceIndex) == controllers.end()) return;
+		auto c = controllers[ev.trackedDeviceIndex];
+		
+		std::string debugStr = std::string(pressed ? "pressed" : "unpressed") + ", " + (touched ? "touched" : "untouched");
+
+		switch (ev.data.controller.button) {
+		case vr::k_EButton_SteamVR_Touchpad:
+		{
+			auto axis = controllerState.rAxis[0]; // vr::k_eControllerAxis_TrackPad
+			ofLogVerbose(evTypeStr) << "touchpad\t axis: (" << axis.x << ", " << axis.y << "), " << debugStr;
+			c->pad.axis = glm::vec2(axis.x, axis.y);
+			c->pad.pressed = pressed;
+			c->pad.touched = touched;
+
+			AxisMove e{ c->pad.axis, c->deviceIndex, c->role };
+			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(onPadPressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(onPadUnpressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonTouch) ofNotifyEvent(onPadTouched, e);
+			else if (ev.eventType == vr::VREvent_ButtonUntouch) ofNotifyEvent(onPadUntouched, e);
+
+		} break;
+		case vr::k_EButton_SteamVR_Trigger:
+		{			
+			auto axis = controllerState.rAxis[1]; // vr::k_eControllerAxis_Trigger
+			ofLogVerbose(evTypeStr) << "trigger\t axis: (" << axis.x << "), " << debugStr;
+			c->trigger.axis = glm::vec2(axis.x, axis.y);
+			c->trigger.pressed = pressed;
+			c->trigger.touched = touched;
+
+			AxisMove e{ c->pad.axis, c->deviceIndex, c->role };
+			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(onTriggerPressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(onTriggerUnpressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonTouch) ofNotifyEvent(onTriggerTouched, e);
+			else if (ev.eventType == vr::VREvent_ButtonUntouch) ofNotifyEvent(onTriggerUntouched, e);
+
+		} break;
+		case vr::k_EButton_IndexController_JoyStick:
+		{
+			auto axis = controllerState.rAxis[2]; // vr::k_eControllerAxis_Joystick
+			ofLogVerbose(evTypeStr) << "joystick\t axis: (" << axis.x << ", " << axis.y << "), " << debugStr;
+			c->joyStick.axis = glm::vec2(axis.x, axis.y);
+			c->joyStick.pressed = pressed;
+			c->joyStick.touched = touched;
+
+			AxisMove e{ c->pad.axis, c->deviceIndex, c->role };
+			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(onJoyStickPressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(onJoyStickUnpressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonTouch) ofNotifyEvent(onJoyStickTouched, e);
+			else if (ev.eventType == vr::VREvent_ButtonUntouch) ofNotifyEvent(onJoyStickUntouched, e);
+
+		} break;
+		case vr::k_EButton_A:
+		{
+			ofLogVerbose(evTypeStr) << "button_a\t " << debugStr;
+			c->buttons[vr::k_EButton_A].pressed = pressed;
+			c->buttons[vr::k_EButton_A].touched = touched;
+
+			ButtonInfo e{ vr::k_EButton_A, c->deviceIndex, c->role };
+			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(onButtonPressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(onButtonUnpressed, e);
+
+		} break;
+		case vr::k_EButton_Grip:
+		{
+			ofLogVerbose(evTypeStr) << "button_grip\t " << debugStr;
+			c->buttons[vr::k_EButton_Grip].pressed = pressed;
+			c->buttons[vr::k_EButton_Grip].touched = touched;
+
+			ButtonInfo e{ vr::k_EButton_Grip, c->deviceIndex, c->role };
+			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(onButtonPressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(onButtonUnpressed, e);
+
+		} break;
+		default:
+		{
+			ofLogVerbose(evTypeStr) << "button( " << ev.data.controller.button << " )\t " << debugStr;
+			c->buttons[ev.data.controller.button].pressed = pressed;
+			c->buttons[ev.data.controller.button].touched = touched;
+
+			ButtonInfo e{ (vr::EVRButtonId)ev.data.controller.button, c->deviceIndex, c->role };
+			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(onButtonPressed, e);
+			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(onButtonUnpressed, e);
+		}
+		}
+	}
+
 	void ControllerManager::loadModel(vr::TrackedDeviceIndex_t deviceIndex, vr::ETrackedControllerRole role) {
 		
 		std::string modelName = getPropString(vrSys, deviceIndex, vr::Prop_RenderModelName_String);

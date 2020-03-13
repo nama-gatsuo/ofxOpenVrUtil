@@ -45,8 +45,8 @@ namespace ofxOpenVrUtil {
 	void Interface::update() {
 
 		updateTrackedDeviceMatrix();
-		// TODO: handle input
 		handleInput();
+		controllers.update();
 
 		if (trackedCam.isStreaming()) trackedCam.update();
 
@@ -119,7 +119,7 @@ namespace ofxOpenVrUtil {
 		// Loop through tracked devices. Max count is 64 (vr::k_unMaxTrackedDeviceCount)
 		// Index of 0 is always HMD (vr::k_unTrackedDeviceIndex_Hmd)
 		int validPoseCount = 0;
-		for (int i = 0; i < trackedDevivePose.size(); i++) {
+		for (vr::TrackedDeviceIndex_t i = 0; i < trackedDevivePose.size(); i++) {
 			if (trackedDevivePose[i].bPoseIsValid) {
 				validPoseCount++;
 
@@ -156,36 +156,13 @@ namespace ofxOpenVrUtil {
 		vr::VREvent_t ev;
 		while (vrSys->PollNextEvent(&ev, sizeof(vr::VREvent_t))) {
 			
-			// https://github.com/ValveSoftware/openvr/wiki/VREvent_t
-			// https://github.com/ValveSoftware/openvr/wiki/IVRSystem::GetControllerState
-
-			// Pick up only controller event
+			// Pick up only controller event for now
 			if (vrSys->GetTrackedDeviceClass(ev.trackedDeviceIndex) == vr::TrackedDeviceClass_Controller) {
-				
-				vr::VRControllerState_t controllerState;
-				vrSys->GetControllerState(ev.trackedDeviceIndex, &controllerState, sizeof(vr::VRControllerState_t));
-				
-				// ev.eventType ->  EVREventType
-				// ev.data.controller.button -> EVRButtonId
-				// 
-				// uint64_t mask = vr::ButtonMaskFromId(static_cast<vr::EVRButtonId>(ev.data.controller.button));
-				// bool pressed = mask & controllerState.ulButtonPressed;
-				
-				switch (ev.data.controller.button) {
-				case vr::k_EButton_SteamVR_Touchpad: {
-
-				} break;
-				case vr::k_EButton_SteamVR_Trigger: {
-
-				} break;
-				}
-
+				controllers.handleInput(ev);
 			}
 
 		}
-		
-
-
+	
 	}
 
 }

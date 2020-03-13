@@ -34,6 +34,7 @@ OpenVR is a cross-platform open source API to access VR system through [SteamVR]
 
 * *VIVE Only:* [Stencil Mesh (Hidden Area Mesh)](https://youtu.be/ya8vKZRBXdw?t=3449) to avoid pixels to be rendererd. (17% faster)
 * *VIVE PRO Only:* See-through from stereo-camera on HMD
+* Controller inputs as `ofEvent`s
 
 ## Setup
 * OpenVR is a submodule of this repo, so we have to `git submodule`
@@ -47,6 +48,3 @@ OpenVR is a cross-platform open source API to access VR system through [SteamVR]
     ```
 
 * You can then use the OF Project Generator to generate projects with the appropriate headers and libraries included.
-
-## TODO
-* Handling controller's input
