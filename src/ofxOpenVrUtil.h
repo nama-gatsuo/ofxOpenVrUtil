@@ -37,6 +37,7 @@ namespace ofxOpenVrUtil {
 		*/
 		void applyEyeStencil(vr::Hmd_Eye eye);
 
+		void debugDraw();
 	private:
 		void updateTrackedDeviceMatrix();
 		void handleInput();

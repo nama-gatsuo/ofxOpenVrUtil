@@ -1,6 +1,8 @@
 #include "ofxOpenVrUtil.h"
 #include "Utils.h"
 #include "ofGraphics.h"
+#include "of3dGraphics.h"
+#include "of3dUtils.h"
 
 namespace ofxOpenVrUtil {
 	Interface::Interface() :
@@ -90,6 +92,21 @@ namespace ofxOpenVrUtil {
 		ofSetColor(255);
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00); // disable writing to the stencil buffer
+	}
+
+	void Interface::debugDraw() {
+		ofPushMatrix();
+		ofMultMatrix(hmd.getTransformMatrix());
+		ofDrawAxis(0.2f);
+		ofDrawBox(0.08f);
+		ofPopMatrix();
+
+		for (auto& c : controllers.get()) {
+			ofPushMatrix();
+			ofMultMatrix(c.second->getTransform());
+			ofDrawAxis(0.14f);
+			ofPopMatrix();
+		}
 	}
 
 	void Interface::updateTrackedDeviceMatrix() {

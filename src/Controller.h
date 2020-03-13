@@ -22,6 +22,8 @@ namespace ofxOpenVrUtil {
 		
 		const vr::TrackedDeviceIndex_t deviceIndex; // just uint32_t 0 - 64
 		const vr::ETrackedControllerRole role;
+
+		const glm::mat4& getTransform() const { return transform; }
 		void setTransformMatrix(const glm::mat4& t) {
 			transform = t;
 		}
