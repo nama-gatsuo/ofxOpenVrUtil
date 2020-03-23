@@ -24,6 +24,7 @@ namespace ofxOpenVrUtil {
 		TrackedCamera& getTrackedCamera() { return trackedCam; }
 		Hmd& getHmd() { return hmd; }
 		std::unordered_map<vr::TrackedDeviceIndex_t, ofPtr<Controller>>& getControllers() { return controllers.get(); }
+		bool hasControllers() const { return controllers.hasDevices(); }
 
 		/* Apply HMD ModelView transformation per eye */
 		void beginEye(vr::EVREye eye);
