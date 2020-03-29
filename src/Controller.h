@@ -2,7 +2,7 @@
 #include "ofVboMesh.h"
 #include "ofTexture.h"
 #include "openvr.h"
-#include "Utils.h"
+#include "vrUtils.h"
 #include "ofTypes.h"
 
 #include <unordered_map>

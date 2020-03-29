@@ -3,6 +3,8 @@
 #include "ofMain.h"
 #include "ofxOpenVrUtil.h"
 #include "ofxGui.h"
+#include "ui/Gizmo.h"
+#include "ui/GpuRay.h"
 
 class ofApp : public ofBaseApp{
 
@@ -16,7 +18,13 @@ public:
 		
 private:
 	void drawGrid();
+	void drawObject();
 
 	ofxOpenVrUtil::Interface vr;
 	std::array<ofFbo, 2> eyeFbo;
+
+	ofxOpenVrUtil::Gizmo gizmo;
+	ofxOpenVrUtil::GpuRay ray;
+	ofShader lambert;
+	ofVboMesh box;
 };

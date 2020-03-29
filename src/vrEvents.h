@@ -9,7 +9,7 @@ namespace ofxOpenVrUtil {
 	public:
 	
 		struct TrackedDeviceMove {
-			glm::vec3 devicePos;
+			glm::mat4 transform;
 			vr::ETrackedControllerRole role;
 			vr::TrackedDeviceIndex_t index;
 		};
@@ -21,7 +21,7 @@ namespace ofxOpenVrUtil {
 			glm::vec2 axis;
 			vr::TrackedDeviceIndex_t index;
 			vr::ETrackedControllerRole role;
-			glm::vec3 devicePos;
+			glm::mat4 transform;
 		};
 
 		static ofEvent<AxisMove> onTriggerPressed;
@@ -46,7 +46,7 @@ namespace ofxOpenVrUtil {
 			vr::EVRButtonId buttonId;
 			vr::TrackedDeviceIndex_t index;
 			vr::ETrackedControllerRole role;
-			glm::vec3 devicePos;
+			glm::mat4 transform;
 		};
 
 		static ofEvent<ButtonInfo> onButtonPressed;

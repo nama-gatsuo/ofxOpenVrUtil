@@ -48,7 +48,7 @@ namespace ofxOpenVrUtil {
 				if (cc->pad.axis != a) {
 					cc->pad.axis = a;
 					ofLogVerbose("controller") << "touchpad\t axis: (" << a.x << ", " << a.y << ")";
-					Event::AxisMove e{ a, cc->deviceIndex, cc->role, cc->getPosition() };
+					Event::AxisMove e{ a, cc->deviceIndex, cc->role, cc->getTransform() };
 					ofNotifyEvent(Event::onPadUnpressed, e);
 				}
 			}
@@ -59,7 +59,7 @@ namespace ofxOpenVrUtil {
 				if (cc->trigger.axis != a) {
 					cc->trigger.axis = a;
 					ofLogVerbose("controller") << "trigger\t axis: (" << a.x << ")";
-					Event::AxisMove e{ a, cc->deviceIndex, cc->role, cc->getPosition() };
+					Event::AxisMove e{ a, cc->deviceIndex, cc->role, cc->getTransform() };
 					ofNotifyEvent(Event::onTriggerUnpressed, e);
 				}
 			}
@@ -70,7 +70,7 @@ namespace ofxOpenVrUtil {
 				if (cc->joyStick.axis != a) {
 					cc->joyStick.axis = a;
 					ofLogVerbose("controller") << "joystick\t axis: (" << a.x << ")";
-					Event::AxisMove e{ a, cc->deviceIndex, cc->role, cc->getPosition() };
+					Event::AxisMove e{ a, cc->deviceIndex, cc->role, cc->getTransform() };
 					ofNotifyEvent(Event::onJoyStickUnpressed, e);
 				}
 			}
@@ -119,7 +119,7 @@ namespace ofxOpenVrUtil {
 			c->pad.pressed = pressed;
 			c->pad.touched = touched;
 
-			Event::AxisMove e{ c->pad.axis, c->deviceIndex, c->role, c->getPosition() };
+			Event::AxisMove e{ c->pad.axis, c->deviceIndex, c->role, c->getTransform() };
 			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(Event::onPadPressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(Event::onPadUnpressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonTouch) ofNotifyEvent(Event::onPadTouched, e);
@@ -134,7 +134,7 @@ namespace ofxOpenVrUtil {
 			c->trigger.pressed = pressed;
 			c->trigger.touched = touched;
 
-			Event::AxisMove e{ c->pad.axis, c->deviceIndex, c->role, c->getPosition() };
+			Event::AxisMove e{ c->pad.axis, c->deviceIndex, c->role, c->getTransform() };
 			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(Event::onTriggerPressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(Event::onTriggerUnpressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonTouch) ofNotifyEvent(Event::onTriggerTouched, e);
@@ -149,7 +149,7 @@ namespace ofxOpenVrUtil {
 			c->joyStick.pressed = pressed;
 			c->joyStick.touched = touched;
 
-			Event::AxisMove e{ c->pad.axis, c->deviceIndex, c->role, c->getPosition() };
+			Event::AxisMove e{ c->pad.axis, c->deviceIndex, c->role, c->getTransform() };
 			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(Event::onJoyStickPressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(Event::onJoyStickUnpressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonTouch) ofNotifyEvent(Event::onJoyStickTouched, e);
@@ -162,7 +162,7 @@ namespace ofxOpenVrUtil {
 			c->buttons[vr::k_EButton_A].pressed = pressed;
 			c->buttons[vr::k_EButton_A].touched = touched;
 
-			Event::ButtonInfo e{ vr::k_EButton_A, c->deviceIndex, c->role, c->getPosition() };
+			Event::ButtonInfo e{ vr::k_EButton_A, c->deviceIndex, c->role, c->getTransform() };
 			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(Event::onButtonPressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(Event::onButtonUnpressed, e);
 
@@ -173,7 +173,7 @@ namespace ofxOpenVrUtil {
 			c->buttons[vr::k_EButton_Grip].pressed = pressed;
 			c->buttons[vr::k_EButton_Grip].touched = touched;
 
-			Event::ButtonInfo e{ vr::k_EButton_Grip, c->deviceIndex, c->role, c->getPosition() };
+			Event::ButtonInfo e{ vr::k_EButton_Grip, c->deviceIndex, c->role, c->getTransform() };
 			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(Event::onButtonPressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(Event::onButtonUnpressed, e);
 
@@ -184,7 +184,7 @@ namespace ofxOpenVrUtil {
 			c->buttons[ev.data.controller.button].pressed = pressed;
 			c->buttons[ev.data.controller.button].touched = touched;
 
-			Event::ButtonInfo e{ (vr::EVRButtonId)ev.data.controller.button, c->deviceIndex, c->role, c->getPosition() };
+			Event::ButtonInfo e{ (vr::EVRButtonId)ev.data.controller.button, c->deviceIndex, c->role, c->getTransform() };
 			if (ev.eventType == vr::VREvent_ButtonPress) ofNotifyEvent(Event::onButtonPressed, e);
 			else if (ev.eventType == vr::VREvent_ButtonUnpress) ofNotifyEvent(Event::onButtonUnpressed, e);
 		}

@@ -1,6 +1,6 @@
 #include "Hmd.h"
 #include "ofLog.h"
-#include "Utils.h"
+#include "vrUtils.h"
 
 namespace ofxOpenVrUtil {
 	Hmd::Hmd() : vrSys(nullptr) {}

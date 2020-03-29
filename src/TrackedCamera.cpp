@@ -1,5 +1,5 @@
 #include "TrackedCamera.h"
-#include "Utils.h"
+#include "vrUtils.h"
 #include "ofGraphics.h"
 
 namespace ofxOpenVrUtil {

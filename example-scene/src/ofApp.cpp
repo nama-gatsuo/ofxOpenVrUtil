@@ -2,6 +2,7 @@
 
 void ofApp::setup() {
 	ofSetVerticalSync(false);
+	ofSetLogLevel(OF_LOG_VERBOSE);
 	vr.setup();
 
 	int eyeWidth = vr.getHmd().getEyeWidth();
@@ -23,25 +24,32 @@ void ofApp::setup() {
 		f.allocate(s);
 	}
 
+	gizmo.setup();
+	gizmo.enableListener();
+
+	ray.setup();
+
+	lambert.load("shader/lambert");
+	box = ofMesh::box(0.3, 0.3, 0.3, 1, 1, 1);
 }
 
 void ofApp::update(){
 	vr.update();
-	
+
 	auto drawCall = [&]() {
-		ofNoFill();
 
 		drawGrid();
-		ofDrawAxis(3.);
+		
 
-		ofPushMatrix();
-		ofTranslate(0, 1.5, 0);
-		for (int i = 0; i < 24; i++) {
-			ofRotateY(1.f + ofGetElapsedTimef() * 1.f);
-			ofRotateZ(-1.f + ofGetElapsedTimef() * 2.f);
-			ofDrawBox(glm::vec3(0), .6f);
-		}
-		ofPopMatrix();
+		gizmo.pushMatrix(true);
+		lambert.begin();
+		lambert.setUniform3f("lightDir", glm::vec3(1));
+		lambert.setUniform4f("baseColor", ofFloatColor(0.7f));
+		lambert.setUniformMatrix4f("viewMatrix", glm::inverse(vr.getHmd().getTransformMatrix()));
+		drawObject();
+		lambert.end();
+		gizmo.popMatrix();
+
 	};
 
 	for (int i = 0; i < 2; i++) {
@@ -60,6 +68,7 @@ void ofApp::update(){
 			
 			for (auto& c : vr.getControllers()) {
 				c.second->draw();
+				ofDrawSphere(c.second->getPosition(), 0.01f);
 			}
 
 		}		
@@ -127,5 +136,16 @@ void ofApp::drawGrid() {
 	ofDrawLine(0, 0, -2.f, 0, 0, 2.f);
 
 	ofPopStyle();
+}
+
+void ofApp::drawObject() {
+	ofPushMatrix();
+	ofTranslate(0, .5, 0);
+	for (int i = 0; i < 24; i++) {
+		ofRotateY(1.f + ofGetElapsedTimef() * 1.f);
+		ofRotateZ(-1.f + ofGetElapsedTimef() * 2.f);
+		box.draw();
+	}
+	ofPopMatrix();
 }
 

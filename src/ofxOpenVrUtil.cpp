@@ -1,5 +1,5 @@
 #include "ofxOpenVrUtil.h"
-#include "Utils.h"
+#include "vrUtils.h"
 #include "ofGraphics.h"
 #include "of3dGraphics.h"
 #include "of3dUtils.h"
@@ -135,7 +135,7 @@ namespace ofxOpenVrUtil {
 						if (c->getTransform() != m) {
 							c->setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
 
-							Event::TrackedDeviceMove e{ c->getPosition(), controllerRole, i };
+							Event::TrackedDeviceMove e{ c->getTransform(), controllerRole, i };
 							ofNotifyEvent(Event::onControllerMove, e);
 						}
 
@@ -149,7 +149,7 @@ namespace ofxOpenVrUtil {
 					if (hmd.pose != m) {
 						hmd.pose = m;
 
-						Event::TrackedDeviceMove e{ hmd.getPosition(), vr::TrackedControllerRole_Invalid, i };
+						Event::TrackedDeviceMove e{ hmd.getTransformMatrix(), vr::TrackedControllerRole_Invalid, i };
 						ofNotifyEvent(Event::onHmdMove, e);
 					}
 
