@@ -3,9 +3,15 @@
 
 OpenVR is a cross-platform open source API to access VR system through [SteamVR](https://store.steampowered.com/steamvr) (by ValveSoftware). Main support target is HTC VIVE (I was using VIVE PRO for developping/debugging) but it might be compatible to Oculus Rift S, Valve Index or other VR hardwares which can play SteamVR for just displaying a scene. But for major hardware vendors, such like Oculus(facebook) and HTC published native SDK which are supposed to run faster than via OpenVR.
 
+*example-scene*
+
 ![example-scene](./vr.gif)
 
+
+*example-ViveTrackers*
+
 ![example-ViveTrackers](./vivetrackers.png)
+
 
 ## Feature
 * Rendering controllers (mesh + texture)
@@ -21,6 +27,8 @@ OpenVR is a cross-platform open source API to access VR system through [SteamVR]
             vr.setup();
         }
         void update() {
+            vr.update(); // update device orientations
+
             // ... update your textures for both eyes
 
             // submit textures to VR!
