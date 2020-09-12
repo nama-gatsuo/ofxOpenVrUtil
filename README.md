@@ -3,7 +3,9 @@
 
 OpenVR is a cross-platform open source API to access VR system through [SteamVR](https://store.steampowered.com/steamvr) (by ValveSoftware). Main support target is HTC VIVE (I was using VIVE PRO for developping/debugging) but it might be compatible to Oculus Rift S, Valve Index or other VR hardwares which can play SteamVR for just displaying a scene. But for major hardware vendors, such like Oculus(facebook) and HTC published native SDK which are supposed to run faster than via OpenVR.
 
-![](./vr.gif)
+![example-scene](./vr.gif)
+
+![example-ViveTrackers](./vivetrackers.png)
 
 ## Feature
 * Rendering controllers (mesh + texture)
@@ -35,7 +37,9 @@ OpenVR is a cross-platform open source API to access VR system through [SteamVR]
 * *VIVE Only:* [Stencil Mesh (Hidden Area Mesh)](https://youtu.be/ya8vKZRBXdw?t=3449) to avoid pixels to be rendererd. (17% faster)
 * *VIVE PRO Only:* See-through from stereo-camera on HMD
 * Controller inputs as `ofEvent`s
-* Vive Trackers without HMD (background mode)
+* Gizmo UI in VR
+* Vive trackers
+* Run without HMD (see an example)
 
 ## Setup
 * OpenVR is a submodule of this repo, so we have to `git submodule`

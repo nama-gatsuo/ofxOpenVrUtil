@@ -9,6 +9,15 @@
 
 namespace ofxOpenVrUtil {
 
+	struct Tracker {
+		glm::mat4 transform;
+		vr::TrackedDeviceIndex_t trackedDeviceId;
+	};
+
+	struct TrackerReference {
+		glm::mat4 transform;
+		vr::TrackedDeviceIndex_t trackedDeviceId;
+	};
 
 	class Interface {
 	public:
@@ -39,6 +48,9 @@ namespace ofxOpenVrUtil {
 		void applyEyeStencil(vr::Hmd_Eye eye);
 
 		void debugDraw();
+
+		int getNumTrackedDevice() const { return trackeDeviceNum; }
+
 	private:
 		void updateTrackedDeviceMatrix();
 		void handleInput();
@@ -55,7 +67,34 @@ namespace ofxOpenVrUtil {
 
 		std::vector<glm::mat4> trackedDeviceMatrix;
 		std::vector<vr::TrackedDevicePose_t> trackedDevivePose;
+		std::vector<ofPtr<Tracker>> trackers;
+		std::vector<ofPtr<TrackerReference>> trackerRefs;
 
+		int trackeDeviceNum;
+	};
+
+	class NoHmdInterface {
+	public:
+		NoHmdInterface();
+		~NoHmdInterface();
+
+		void setup();
+		void update();
+		void exit();
+
+		const std::vector<ofPtr<Tracker>>& getTrackers() { return trackers; }
+		const std::vector<ofPtr<TrackerReference>>& getTrackerRefs() { return trackerRefs; }
+		int getNumTrackedDevice() const { return trackeDeviceNum; }
+
+	private:
+		vr::IVRSystem* vrSys;
+
+		std::vector<vr::TrackedDevicePose_t> trackedDevivePose;
+		int trackeDeviceNum;
+
+		ControllerManager controllers;
+		std::vector<ofPtr<Tracker>> trackers;
+		std::vector<ofPtr<TrackerReference>> trackerRefs;
 	};
 
 }

@@ -155,8 +155,28 @@ namespace ofxOpenVrUtil {
 
 				} break;
 				case vr::TrackedDeviceClass_Invalid: break;
-				case vr::TrackedDeviceClass_GenericTracker: break;
-				case vr::TrackedDeviceClass_TrackingReference: break;
+				case vr::TrackedDeviceClass_GenericTracker: {
+					auto it = std::find_if(trackers.begin(), trackers.end(), [&](ofPtr<Tracker> tracker) { return tracker->trackedDeviceId == i; });
+					if (it == trackers.end()) {
+						ofPtr<Tracker> tracker = std::make_shared<Tracker>();
+						tracker->trackedDeviceId = i;
+						tracker->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+						trackers.push_back(std::move(tracker));
+					} else {
+						(*it)->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+					}
+				} break;
+				case vr::TrackedDeviceClass_TrackingReference: {
+					auto it = std::find_if(trackerRefs.begin(), trackerRefs.end(), [&](ofPtr<TrackerReference> trackerRef) { return trackerRef->trackedDeviceId == i; });
+					if (it == trackerRefs.end()) {
+						ofPtr<TrackerReference> trackerRef = std::make_shared<TrackerReference>();
+						trackerRef->trackedDeviceId = i;
+						trackerRef->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+						trackerRefs.push_back(std::move(trackerRef));
+					} else {
+						(*it)->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+					}
+				} break;
 				default: break;
 				}
 
@@ -166,6 +186,7 @@ namespace ofxOpenVrUtil {
 			}
 
 		}
+		trackeDeviceNum = validPoseCount;
 
 	}
 
@@ -181,5 +202,85 @@ namespace ofxOpenVrUtil {
 		}
 
 	}
+
+
+	NoHmdInterface::NoHmdInterface() {}
+
+	NoHmdInterface::~NoHmdInterface() {}
+
+	void NoHmdInterface::setup() {
+
+		vr::EVRInitError e = vr::VRInitError_None;
+		// Initialize without activating VR
+		vrSys = vr::VR_Init(&e, vr::VRApplication_Background);
+		if (e != vr::VRInitError_None) {
+			ofLogError(__FUNCTION__) << vr::VR_GetVRInitErrorAsEnglishDescription(e);
+		}
+
+		controllers.setup(vrSys);
+
+		trackedDevivePose.resize(vr::k_unMaxTrackedDeviceCount);
+	}
+
+	void NoHmdInterface::update() {
+		vrSys->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseRawAndUncalibrated, 0, trackedDevivePose.data(), vr::k_unMaxTrackedDeviceCount);
+
+		int validPoseCount = 0;
+		for (int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
+			if (trackedDevivePose[i].bPoseIsValid) {
+				switch (vrSys->GetTrackedDeviceClass(i)) {
+				case vr::TrackedDeviceClass_Controller:
+				{
+					auto controllerRole = vrSys->GetControllerRoleForTrackedDeviceIndex(i);
+					if (controllers.hasDevice(i, controllerRole)) {
+						glm::mat4 m = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+						auto c = controllers.get()[i];
+
+						if (c->getTransform() != m) {
+							c->setTransformMatrix(toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking));
+
+							Event::TrackedDeviceMove e{ c->getTransform(), controllerRole, i };
+							ofNotifyEvent(Event::onControllerMove, e);
+						}
+
+					} else {
+						controllers.addDevice(i, controllerRole);
+					}
+				} break;
+				case vr::TrackedDeviceClass_HMD: break;
+				case vr::TrackedDeviceClass_GenericTracker: {
+					
+					auto it = std::find_if(trackers.begin(), trackers.end(), [&](ofPtr<Tracker> tracker) { return tracker->trackedDeviceId == i; });
+					if (it == trackers.end()) {
+						ofPtr<Tracker> tracker = std::make_shared<Tracker>();
+						tracker->trackedDeviceId = i;
+						tracker->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+						trackers.push_back(std::move(tracker));
+					} else {
+						(*it)->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+					}
+
+				} break;
+				case vr::TrackedDeviceClass_TrackingReference: {
+					auto it = std::find_if(trackerRefs.begin(), trackerRefs.end(), [&](ofPtr<TrackerReference> trackerRef) { return trackerRef->trackedDeviceId == i; });
+					if (it == trackerRefs.end()) {
+						ofPtr<TrackerReference> trackerRef = std::make_shared<TrackerReference>();
+						trackerRef->trackedDeviceId = i;
+						trackerRef->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+						trackerRefs.push_back(std::move(trackerRef));
+					} else {
+						(*it)->transform = toGlm(trackedDevivePose[i].mDeviceToAbsoluteTracking);
+					}
+				} break;
+				case vr::TrackedDeviceClass_Invalid: break;
+				default: break;
+				}
+
+			}
+		}
+		trackeDeviceNum = validPoseCount;
+	}
+
+	void NoHmdInterface::exit() {}
 
 }
